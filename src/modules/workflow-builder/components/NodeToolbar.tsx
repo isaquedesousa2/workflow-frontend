@@ -1,137 +1,148 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useWorkflowBuilder } from '../contexts/WorkflowBuilderContext';
-import { Plus } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useState, FC } from 'react'
+import { Plus } from 'lucide-react'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import ActivityNode from './nodes/ActivityNode'
+import { WebhookNode } from './nodes/WebhookNode'
+import { ConditionNode } from './nodes/ConditionNode'
+import DecisionNode from '@/modules/workflow-builder/components/nodes/DecisionNode'
 
 interface NodeOption {
-    type: string;
-    label: string;
-    icon: string;
-    description: string;
-    initialData?: {
-        conditions?: {
-            id: string;
-            label: string;
-            value: string;
-        }[];
-    };
+  type: string
+  label: string
+  icon: string
+  description: string
+  component: FC<any>
+  initialData?: {
+    conditions?: {
+      id: string
+      label: string
+      value: string
+    }[]
+  }
 }
 
 const nodeOptions: NodeOption[] = [
-    {
-        type: 'Início',
-        label: 'Início do Fluxo',
-        icon: '🎯',
-        description: 'Ponto inicial do fluxo de trabalho',
+  {
+    type: 'Atividade',
+    label: 'Atividade',
+    icon: '📝',
+    description: 'Tarefa ou atividade a ser executada',
+    component: ActivityNode,
+  },
+  {
+    type: 'Decisão',
+    label: 'Decisão',
+    icon: '🔍',
+    description: 'Decisão entre duas opções',
+    component: DecisionNode,
+  },
+  {
+    type: 'Webhook',
+    label: 'Disparar Webhook',
+    icon: '🌐',
+    description: 'Dispara uma requisição HTTP para um endpoint',
+    component: WebhookNode,
+  },
+  {
+    type: 'Condição',
+    label: 'Condição',
+    icon: '❓',
+    description: 'Bifurcação condicional do fluxo',
+    component: ConditionNode,
+    initialData: {
+      conditions: [
+        { id: 'cond1', label: 'Condição 1', value: 'cond1' },
+        { id: 'cond2', label: 'Condição 2', value: 'cond2' },
+        { id: 'cond2', label: 'Condição 2', value: 'cond2' },
+      ],
     },
-    {
-        type: 'Fim',
-        label: 'Finalizar Fluxo',
-        icon: '🔚',
-        description: 'Ponto final do fluxo de trabalho',
-    },
-    {
-        type: 'Atividade',
-        label: 'Atividade',
-        icon: '📝',
-        description: 'Tarefa ou atividade a ser executada',
-    },
-    {
-        type: 'Webhook',
-        label: 'Disparar Webhook',
-        icon: '🌐',
-        description: 'Dispara uma requisição HTTP para um endpoint',
-    },
-    {
-        type: 'Condição',
-        label: 'Condição',
-        icon: '❓',
-        description: 'Bifurcação condicional do fluxo',
-        initialData: {
-            conditions: [
-                { id: 'cond1', label: 'Condição 1', value: 'cond1' },
-                { id: 'cond2', label: 'Condição 2', value: 'cond2' },
-                { id: 'cond3', label: 'Condição 3', value: 'cond3' },
-                { id: 'cond4', label: 'Condição 4', value: 'cond4' },
-                { id: 'cond5', label: 'Condição 5', value: 'cond5' },
-            ],
-        },
-    },
-    {
-        type: 'Atraso',
-        label: 'Atraso',
-        icon: '⏱️',
-        description: 'Adiciona um tempo de espera',
-    },
-    {
-        type: 'Email',
-        label: 'Enviar Email',
-        icon: '📧',
-        description: 'Envia uma mensagem por email',
-    },
-];
+  },
+]
 
 export const NodeToolbar = () => {
-    const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false)
 
-    const onDragStart = (event: React.DragEvent, nodeData: NodeOption) => {
-        event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
-        event.dataTransfer.effectAllowed = 'move';
-    };
+  const onDragStart = (event: React.DragEvent, nodeData: NodeOption) => {
+    const { type, label, icon, description, initialData } = nodeData
+    const serializedData = { type, label, icon, description, initialData }
+    event.dataTransfer.setData('application/reactflow', JSON.stringify(serializedData))
+    event.dataTransfer.effectAllowed = 'move'
+  }
 
-    return (
-        <div className="fixed bottom-8 right-8 z-50">
-            <Popover open={isOpen} onOpenChange={setIsOpen}>
-                <PopoverTrigger asChild>
-                    <button
-                        className="w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
-                        onClick={() => setIsOpen(!isOpen)}
-                    >
-                        <Plus size={24} />
-                    </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[400px] p-0" align="end" side="top" sideOffset={20}>
-                    <div className="p-4 border-b">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-semibold text-gray-800">Escolha uma ação</h2>
-                            <button className="text-blue-600 hover:text-blue-700" onClick={() => setIsOpen(false)}>
-                                Cancelar
-                            </button>
-                        </div>
-                    </div>
+  return (
+    <div className="fixed bottom-8 right-8 z-50">
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <button
+            className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-full shadow-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-300 flex items-center justify-center group relative"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            <Plus
+              size={28}
+              className="transform transition-transform duration-300 group-hover:rotate-90"
+            />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          className="w-[420px] p-0 border-none shadow-xl rounded-xl overflow-hidden"
+          align="end"
+          side="top"
+          sideOffset={20}
+        >
+          <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-bold text-white">Adicionar Nó</h2>
+              <button
+                className="text-white/80 hover:text-white transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                <Plus className="rotate-45" size={20} />
+              </button>
+            </div>
+            <p className="text-white/80 text-sm mt-1">Arraste um nó para o canvas</p>
+          </div>
 
-                    <div className="p-4 space-y-3 max-h-[60vh] overflow-y-auto">
-                        {nodeOptions.map((node, index) => (
-                            <div
-                                key={index}
-                                draggable
-                                onDragStart={(e) => onDragStart(e, node)}
-                                className="flex items-center gap-3 p-3 border rounded hover:bg-gray-50 transition-colors text-left w-full cursor-move"
-                            >
-                                <div
-                                    className={`w-8 h-8 flex items-center justify-center ${
-                                        node.type === 'Início'
-                                            ? 'bg-emerald-100 text-emerald-600'
-                                            : node.type === 'Fim'
-                                            ? 'bg-red-100 text-red-600'
-                                            : node.type === 'Condição'
-                                            ? 'bg-purple-100 text-purple-600'
-                                            : 'bg-orange-100 text-orange-600'
-                                    } rounded`}
-                                >
-                                    <span className="text-lg">{node.icon}</span>
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="font-medium text-gray-900">{node.label}</h3>
-                                    <p className="text-sm text-gray-500">{node.description}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </PopoverContent>
-            </Popover>
-        </div>
-    );
-};
+          <div className="p-4 space-y-3 max-h-[60vh] overflow-y-auto bg-white">
+            {nodeOptions.map((node, index) => (
+              <div
+                key={index}
+                draggable
+                onDragStart={(e) => onDragStart(e, node)}
+                className="flex items-center gap-4 p-4 border rounded-lg hover:border-purple-200 hover:bg-purple-50 transition-all duration-200 text-left w-full cursor-move group"
+              >
+                <div className="w-10 h-10 flex items-center justify-center bg-purple-100 text-purple-600 rounded-lg group-hover:bg-purple-200 group-hover:text-purple-700 transition-colors">
+                  <span className="text-xl">{node.icon}</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900 group-hover:text-purple-700 transition-colors">
+                    {node.label}
+                  </h3>
+                  <p className="text-sm text-gray-500 group-hover:text-gray-600 transition-colors">
+                    {node.description}
+                  </p>
+                </div>
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <svg
+                    className="w-5 h-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 8h16M4 16h16"
+                    />
+                  </svg>
+                </div>
+              </div>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  )
+}

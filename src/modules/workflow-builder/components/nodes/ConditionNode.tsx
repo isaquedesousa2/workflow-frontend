@@ -1,7 +1,7 @@
-import { FC, memo } from 'react';
+import { FC } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 
-interface ConditionNodeData {
+export interface ConditionNodeData {
     label: string;
     type: string;
     icon: string;
@@ -21,7 +21,7 @@ const getNodeStyles = (): { iconBg: string; iconColor: string } => {
     };
 };
 
-const ConditionNode: FC<NodeProps<ConditionNodeData>> = ({ data, selected, id }) => {
+export const ConditionNode: FC<NodeProps<ConditionNodeData>> = ({ data, selected, id }) => {
     const { iconBg, iconColor } = getNodeStyles();
 
     const handleDelete = (e: React.MouseEvent) => {
@@ -48,63 +48,47 @@ const ConditionNode: FC<NodeProps<ConditionNodeData>> = ({ data, selected, id })
                     <div className="flex-1">
                         <div className="flex items-center justify-between">
                             <p className="font-medium text-gray-700">{data.label}</p>
-                            <button
-                                onClick={handleDelete}
-                                className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 cursor-pointer"
-                                title="Excluir nó"
-                                aria-label="Excluir nó"
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                >
-                                    <path d="M3 6h18" />
-                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                                </svg>
-                            </button>
+                            {data.onDelete && (
+                                <button onClick={handleDelete} className="text-gray-400 hover:text-red-500 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path
+                                            fillRule="evenodd"
+                                            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                                            clipRule="evenodd"
+                                        />
+                                    </svg>
+                                </button>
+                            )}
                         </div>
-                        {data.description && <p className="text-sm text-gray-500 mt-0.5">{data.description}</p>}
+                        <p className="text-sm text-gray-500">{data.description}</p>
                     </div>
                 </div>
 
-                <div className="mt-3 space-y-2">
+                <div className="mt-4 space-y-2">
                     {data.conditions.map((condition) => (
-                        <div key={condition.id} className="flex items-center gap-2 relative">
-                            <div className="flex-1">
-                                <input
-                                    type="text"
-                                    value={condition.label}
-                                    className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                    readOnly
-                                />
-                            </div>
-                            <Handle
-                                type="source"
-                                position={Position.Right}
-                                id={condition.id}
-                                className="w-10 h-10 !bg-purple-500 border-2 border-white hover:!bg-purple-600 transition-colors"
-                                style={{
-                                    right: -8,
-                                    width: '16px',
-                                    height: '16px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                }}
-                            />
+                        <div key={condition.id} className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-purple-500" />
+                            <p className="text-sm text-gray-600">{condition.label}</p>
                         </div>
                     ))}
                 </div>
             </div>
+
+            {data.conditions.map((condition, index) => (
+                <Handle
+                    key={condition.id}
+                    type="source"
+                    position={Position.Right}
+                    id={condition.id}
+                    className="w-10 h-10 !bg-purple-500 border-2 border-white hover:!bg-purple-600 transition-colors"
+                    style={{
+                        right: -9,
+                        width: '16px',
+                        height: '16px',
+                        top: `${((index + 1) / (data.conditions.length + 1)) * 100}%`,
+                    }}
+                />
+            ))}
         </div>
     );
 };
-
-export default memo(ConditionNode);
