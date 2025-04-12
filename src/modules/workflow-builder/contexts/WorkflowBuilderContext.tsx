@@ -13,6 +13,8 @@ interface WorkflowBuilderContextData {
     removeEdge: (edgeId: string) => void;
     selectedNode: Node | null;
     setSelectedNode: Dispatch<SetStateAction<Node | null>>;
+    processName: string;
+    setProcessName: Dispatch<SetStateAction<string>>;
 }
 
 const WorkflowBuilderContext = createContext<WorkflowBuilderContextData>({} as WorkflowBuilderContextData);
@@ -33,6 +35,7 @@ export const WorkflowBuilderProvider: FC<WorkflowBuilderProviderProps> = ({ chil
     const [nodes, setNodes] = useState<Node[]>([]);
     const [edges, setEdges] = useState<Edge[]>([]);
     const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+    const [processName, setProcessName] = useState('Novo Processo');
 
     const addNodeBetween = (sourceId: string, targetId: string, nodeType: NodeTypes) => {
         const sourceNode = nodes.find((node) => node.id === sourceId);
@@ -89,6 +92,8 @@ export const WorkflowBuilderProvider: FC<WorkflowBuilderProviderProps> = ({ chil
                 removeEdge,
                 selectedNode,
                 setSelectedNode,
+                processName,
+                setProcessName,
             }}
         >
             {children}

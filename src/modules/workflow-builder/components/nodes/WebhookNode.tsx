@@ -17,7 +17,7 @@ interface WebhookNodeData {
 
 const WebhookNode: FC<NodeProps<WebhookNodeData>> = ({ data, selected }) => {
     return (
-        <Card className={`w-[300px] ${selected ? 'ring-2 ring-blue-500' : ''}`}>
+        <Card className={`w-[300px] ring-1 ring-purple-300 ${selected ? 'ring-2 ring-purple-500' : ''}`}>
             <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
                     <span className="text-2xl">🌐</span>

@@ -31,7 +31,7 @@ const getNodeStyles = (type: NodeType): { iconBg: string; iconColor: string } =>
     }
 };
 
-export const CustomNode: FC<NodeProps<CustomNodeData>> = memo(({ data, id }) => {
+export const CustomNode: FC<NodeProps<CustomNodeData>> = memo(({ data, id, selected }) => {
     const { iconBg, iconColor } = getNodeStyles(data.type);
     const icon = data.icon || '⚡';
 
@@ -45,7 +45,7 @@ export const CustomNode: FC<NodeProps<CustomNodeData>> = memo(({ data, id }) => 
     const isDeletable = data.type !== 'Início' && data.type !== 'Fim';
 
     return (
-        <div className="bg-white rounded shadow-lg min-w-[200px]">
+        <div className={`bg-white rounded shadow-lg min-w-[200px] max-w-[300px] ring-1 ring-purple-300 ${selected ? 'ring-2 ring-purple-500' : ''}`}>
             {data.type !== 'Início' && (
                 <Handle
                     type="target"
@@ -60,13 +60,13 @@ export const CustomNode: FC<NodeProps<CustomNodeData>> = memo(({ data, id }) => 
                     <div className={`w-8 h-8 flex items-center justify-center ${iconBg} ${iconColor} rounded`}>
                         <span className="text-lg">{icon}</span>
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                            <p className="font-medium text-gray-700">{data.label}</p>
+                            <p className="font-medium text-gray-700 truncate">{data.label}</p>
                             {isDeletable && (
                                 <button
                                     onClick={handleDelete}
-                                    className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 cursor-pointer"
+                                    className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 cursor-pointer flex-shrink-0"
                                     title="Excluir nó"
                                     aria-label="Excluir nó"
                                 >
@@ -88,7 +88,7 @@ export const CustomNode: FC<NodeProps<CustomNodeData>> = memo(({ data, id }) => 
                                 </button>
                             )}
                         </div>
-                        {data.description && <p className="text-sm text-gray-500 mt-0.5">{data.description}</p>}
+                        {data.description && <p className="text-sm text-gray-500 mt-0.5 break-words whitespace-pre-wrap">{data.description}</p>}
                     </div>
                 </div>
             </div>

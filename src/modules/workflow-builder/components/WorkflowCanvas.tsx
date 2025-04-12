@@ -2,12 +2,10 @@
 
 import { FC, useCallback, memo, useEffect, useRef, useState } from 'react';
 import ReactFlow, {
-    Controls,
     addEdge,
     Connection,
     Edge,
     DefaultEdgeOptions,
-    Panel,
     Node,
     NodeChange,
     EdgeChange,
@@ -15,6 +13,7 @@ import ReactFlow, {
     applyEdgeChanges,
     NodeMouseHandler,
     ReactFlowInstance,
+    ConnectionMode,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { useWorkflowBuilder } from '../contexts/WorkflowBuilderContext';
@@ -26,6 +25,7 @@ import { NodeTypes } from '../types';
 import ActivityNode from './nodes/ActivityNode';
 import WebhookNode from './nodes/WebhookNode';
 import ConditionNode from './nodes/ConditionNode';
+import { NodeDrawer } from './NodeDrawer';
 
 const nodeTypes = {
     customNode: CustomNode,
@@ -42,7 +42,6 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
     style: {
         strokeWidth: 3,
         stroke: '#8b5cf6',
-        cursor: 'progress',
     },
     type: 'custom',
 };
@@ -95,7 +94,7 @@ const createInitialNodes = (
     return initialNodes;
 };
 
-export const WorkflowCanvas: FC<WorkflowCanvasProps> = memo(({ onSave }) => {
+export const WorkflowCanvas: FC<WorkflowCanvasProps> = memo(() => {
     const { nodes, edges, setNodes, setEdges, setSelectedNode, addNodeBetween } = useWorkflowBuilder();
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
     const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
@@ -192,12 +191,6 @@ export const WorkflowCanvas: FC<WorkflowCanvasProps> = memo(({ onSave }) => {
         [setSelectedNode]
     );
 
-    const handleSave = useCallback(() => {
-        if (onSave) {
-            onSave({ nodes, edges });
-        }
-    }, [nodes, edges, onSave]);
-
     const onNodesChange = useCallback(
         (changes: NodeChange[]) => {
             setNodes((nds: Node[]) => applyNodeChanges(changes, nds));
@@ -241,15 +234,10 @@ export const WorkflowCanvas: FC<WorkflowCanvasProps> = memo(({ onSave }) => {
                     minZoom={0.5}
                     maxZoom={1.5}
                     defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+                    connectionMode={ConnectionMode.Loose}
+                    connectionLineStyle={{ stroke: '#8b5cf6', strokeWidth: 3 }}
                 >
-                    <Controls className="bg-white border shadow-sm rounded-lg m-4" showInteractive={false} />
-
-                    <Panel position="top-right" className="bg-white border shadow-sm rounded-lg m-4 p-2">
-                        <button onClick={handleSave} className="flex items-center gap-2 px-3 py-1 text-sm text-gray-700 hover:text-gray-900">
-                            <span>💾</span>
-                            Salvar
-                        </button>
-                    </Panel>
+                    {/* <Controls className="bg-white border shadow-sm rounded-lg m-4" showInteractive={false} /> */}
                 </ReactFlow>
             </div>
             <NodeToolbar />
@@ -261,6 +249,7 @@ export const WorkflowCanvas: FC<WorkflowCanvasProps> = memo(({ onSave }) => {
                 }}
                 onSelect={handleNodeSelect}
             />
+            <NodeDrawer />
         </div>
     );
 });

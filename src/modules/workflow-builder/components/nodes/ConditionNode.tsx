@@ -32,7 +32,7 @@ const ConditionNode: FC<NodeProps<ConditionNodeData>> = ({ data, selected, id })
     };
 
     return (
-        <div className={`bg-white rounded shadow-lg min-w-[200px] ${selected ? 'ring-2 ring-blue-500' : ''}`}>
+        <div className={`bg-white rounded shadow-lg min-w-[200px] max-w-[300px] ring-1 ring-purple-300 ${selected ? 'ring-2 ring-purple-500' : ''}`}>
             <Handle
                 type="target"
                 position={Position.Left}
