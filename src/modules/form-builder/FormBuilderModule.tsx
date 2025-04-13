@@ -2,12 +2,12 @@
 
 import React from 'react'
 import { FormBuilderProvider, useFormBuilder } from './contexts/FormBuilderContext'
-import FormBuilderCanvas from './components/FormBuilderCanvas'
-import { FieldProperties } from './components/FieldProperties'
-import { ComponentSidebar } from './components/ComponentSidebar'
+import { FormBuilderCanvas } from './components/FormBuilderCanvas'
+import { FormBuilderSidebar } from './components/FormBuilderSidebar'
 import { Button } from '@/components/ui/button'
 import { Save } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { FormPreview } from '@/modules/form-builder/components/FormFieldPreview'
 
 interface FormBuilderData {
   name: string
@@ -19,14 +19,13 @@ interface FormBuilderHeaderProps {
 }
 
 const FormBuilderHeader: React.FC<FormBuilderHeaderProps> = ({ onSave }) => {
-  const { layout, formName, setFormName } = useFormBuilder()
+  const { formName, setFormName } = useFormBuilder()
 
   const handleSave = () => {
     if (onSave) {
-      onSave({
-        name: formName,
-        sections: layout.sections,
-      })
+      // onSave({
+      //   name: formName
+      // })
     }
   }
 
@@ -60,26 +59,29 @@ const FormBuilderHeader: React.FC<FormBuilderHeaderProps> = ({ onSave }) => {
 }
 
 const FormBuilderModule: React.FC = () => {
+  const [isPropertiesModalOpen, setIsPropertiesModalOpen] = React.useState(false)
+  // const { selectedField } = useFormBuilder()
+
   const handleSave = (form: FormBuilderData) => {
     console.log('Form saved:', form)
     // Implementar lógica de salvamento
   }
 
+  // React.useEffect(() => {
+  //   if (selectedField) {
+  //     setIsPropertiesModalOpen(true)
+  //   }
+  // }, [selectedField])
+
   return (
     <FormBuilderProvider>
-      <div className="flex flex-col h-screen">
-        <FormBuilderHeader onSave={handleSave} />
-        <div className="flex flex-1 overflow-hidden">
-          <div className="w-64 border-r">
-            <ComponentSidebar />
-          </div>
-          <div className="flex-1 overflow-auto">
-            <FormBuilderCanvas />
-          </div>
-          <div className="w-80 border-l">
-            <FieldProperties />
-          </div>
+      <FormBuilderHeader onSave={handleSave} />
+      <div className="flex h-[calc(100vh-60px)] flex-1 w-full">
+        <div className="w-72">
+          <FormBuilderSidebar />
         </div>
+        <FormBuilderCanvas />
+        <FormPreview />
       </div>
     </FormBuilderProvider>
   )

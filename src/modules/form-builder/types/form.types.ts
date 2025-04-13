@@ -2,17 +2,22 @@ export type FieldType =
   | 'text'
   | 'number'
   | 'email'
-  | 'password'
-  | 'textarea'
+  | 'tel'
+  | 'date'
   | 'select'
   | 'checkbox'
   | 'radio'
-  | 'date'
-  | 'zoom'
-  | 'dataset'
-  | 'table'
+  | 'textarea'
   | 'file'
   | 'hidden'
+  | 'dataset'
+  | 'zoom'
+  | 'table'
+  | 'phone'
+  | 'address'
+  | 'city'
+  | 'state'
+  | 'country'
 
 export interface FieldOption {
   label: string
@@ -46,13 +51,33 @@ export interface FormField {
   id: string
   type: FieldType
   name: string
-  label: string
+  label?: string
   placeholder?: string
-  defaultValue?: any
-  options?: FieldOption[]
-  validation?: FieldValidation
-  visibility?: FieldVisibility
-  style?: FieldStyle
+  description?: string
+  validation?: {
+    required?: boolean
+    readonly?: boolean
+    min?: number
+    max?: number
+    step?: number
+  }
+  options?: Array<{
+    label: string
+    value: string
+  }>
+  style?: {
+    width?: '25%' | '50%' | '75%' | '100%'
+    cols?: number
+    labelPosition?: 'top' | 'left' | 'right'
+    labelColor?: string
+    inputColor?: string
+    backgroundColor?: string
+    borderColor?: string
+    borderRadius?: string
+    padding?: string
+    fontSize?: string
+    helperTextColor?: string
+  }
   dataset?: {
     tablename: string
     displayfield: string
@@ -75,11 +100,13 @@ export interface FormField {
 export interface FormRow {
   id: string
   fields: FormField[]
-  cols: number // Número de colunas na linha (1-4)
+  cols?: number
+  columns?: number
 }
 
 export interface FormLayout {
   rows: FormRow[]
+  sections: any[]
 }
 
 export interface FormMetadata {
