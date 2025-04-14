@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/button'
 import { Save } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { FormPreview } from '@/modules/form-builder/components/FormFieldPreview'
+import { useState } from 'react'
+import { DndContext } from '@dnd-kit/core'
+import type { FormField } from './types/form-builder'
 
 interface FormBuilderData {
   name: string
@@ -58,31 +61,52 @@ const FormBuilderHeader: React.FC<FormBuilderHeaderProps> = ({ onSave }) => {
   )
 }
 
-const FormBuilderModule: React.FC = () => {
-  const [isPropertiesModalOpen, setIsPropertiesModalOpen] = React.useState(false)
-  // const { selectedField } = useFormBuilder()
+const FormBuilderContent: React.FC = () => {
+  const [formFields, setFormFields] = useState<FormField[]>([])
+  const { addRow, addFieldToColumn } = useFormBuilder()
 
-  const handleSave = (form: FormBuilderData) => {
-    console.log('Form saved:', form)
-    // Implementar lógica de salvamento
+  const handleDragEnd = (event: any) => {
+    const { over, active } = event
+    if (!over) return
+
+    if (active.data?.current?.type === 'FIELD') {
+      const newField = {
+        id: crypto.randomUUID(),
+        type: active.data.current.fieldType,
+        name: active.data.current.fieldType,
+        label: active.data.current.label,
+      }
+
+      if (over.id === 'canvas') {
+        // Se soltar no canvas, adiciona uma nova linha
+        setFormFields([...formFields, newField])
+        addRow()
+      } else if (over.data?.current?.type === 'COLUMN') {
+        // Se soltar em uma coluna, adiciona o campo na coluna
+        const { rowId, columnId } = over.data.current
+        addFieldToColumn(rowId, columnId, newField)
+      }
+    }
   }
 
-  // React.useEffect(() => {
-  //   if (selectedField) {
-  //     setIsPropertiesModalOpen(true)
-  //   }
-  // }, [selectedField])
-
   return (
-    <FormBuilderProvider>
-      <FormBuilderHeader onSave={handleSave} />
+    <DndContext onDragEnd={handleDragEnd}>
+      <FormBuilderHeader />
       <div className="flex h-[calc(100vh-60px)] flex-1 w-full">
         <div className="w-72">
           <FormBuilderSidebar />
         </div>
-        <FormBuilderCanvas />
+        <FormBuilderCanvas formFields={formFields} />
         <FormPreview />
       </div>
+    </DndContext>
+  )
+}
+
+const FormBuilderModule: React.FC = () => {
+  return (
+    <FormBuilderProvider>
+      <FormBuilderContent />
     </FormBuilderProvider>
   )
 }

@@ -18,6 +18,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { useFormBuilder } from '../contexts/FormBuilderContext'
 import type { FormField, FieldOption } from '../types/form.types'
+import { TextInput } from '@/modules/form-builder/components/inputs/TextInput'
 
 interface FieldRendererProps {
   field: FormField
@@ -61,6 +62,14 @@ export function FormFieldRenderer({
       : undefined
 
   const renderFieldInput = () => {
+    if (!isPreview) {
+      return (
+        <div className="p-4 border rounded">
+          <p className="text-sm text-gray-500">Preview do campo</p>
+        </div>
+      )
+    }
+
     switch (field.type) {
       case 'text':
       case 'email':
@@ -70,19 +79,9 @@ export function FormFieldRenderer({
       case 'city':
       case 'state':
       case 'country':
-        return (
-          <Input
-            placeholder={field.placeholder || `Digite ${field.label?.toLowerCase()}`}
-            disabled={isPreview}
-          />
-        )
+        return <TextInput field={field} />
       case 'textarea':
-        return (
-          <Textarea
-            placeholder={field.placeholder || `Digite ${field.label?.toLowerCase()}`}
-            disabled={isPreview}
-          />
-        )
+        return <TextInput field={field} />
       case 'select':
         return (
           <Select disabled={isPreview}>

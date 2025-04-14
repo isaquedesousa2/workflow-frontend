@@ -60,6 +60,9 @@ export interface FormField {
     min?: number
     max?: number
     step?: number
+    minLength?: number
+    maxLength?: number
+    pattern?: string
   }
   options?: Array<{
     label: string

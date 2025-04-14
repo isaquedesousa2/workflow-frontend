@@ -114,30 +114,19 @@ function Row({ rowId, columns }: RowProps) {
   )
 }
 
-export function FormBuilderCanvas() {
+export function FormBuilderCanvas({ formFields }: { formFields: FormField[] }) {
   const { rows, addRow, activeField } = useFormBuilder()
-
-  const findActiveField = () => {
-    if (!activeField) return null
-
-    for (const row of rows) {
-      for (const column of row.columns) {
-        const field = column.fields.find((f) => f.id === activeField)
-        if (field) return field
-      }
-    }
-    return null
-  }
+  const { setNodeRef, isOver } = useDroppable({ id: 'canvas' })
 
   return (
-    <div className="flex flex-col h-full border-r w-full">
+    <div ref={setNodeRef} className="flex flex-col h-full border-r w-full">
       <div className="p-4 border-b">
         <Button onClick={addRow} className="w-full" variant="outline">
           <Plus className="h-4 w-4 mr-2" />
           Adicionar linha
         </Button>
       </div>
-      <div className="p-4">
+      <div className="p-4 overflow-y-auto overflow-x-hidden">
         {rows.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400">
             <div className="mb-4 text-5xl">📝</div>

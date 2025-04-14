@@ -8,9 +8,10 @@ import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import type { FieldType } from '../types/form-builder'
 
 interface FieldItemProps {
-  type: any
+  type: FieldType
   label: string
   icon: React.ReactNode
 }
@@ -34,7 +35,7 @@ function FieldItem({ type, label, icon }: FieldItemProps) {
     : undefined
 
   return (
-    <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="cursor-grab">
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="cursor-move">
       <Card className="mb-2 hover:border-gray-400 transition-colors">
         <CardContent className="p-3 flex items-center gap-2">
           {icon}
@@ -47,7 +48,6 @@ function FieldItem({ type, label, icon }: FieldItemProps) {
 
 export function FormBuilderSidebar() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [activeTab, setActiveTab] = useState('propriedades')
 
   return (
     <div className="w-72 border-r bg-white flex flex-col h-full">
