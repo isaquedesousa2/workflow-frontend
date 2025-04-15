@@ -48,7 +48,7 @@ export function FormBuilderPage() {
     } else {
       // Encontrar o componente em todas as linhas
       for (const row of rows) {
-        const component = row.components.find((c) => c.id === id)
+        const component = row.components.find((c): c is FormComponent => c !== null && c.id === id)
         if (component) {
           setActiveComponent(component)
           break
@@ -104,7 +104,9 @@ export function FormBuilderPage() {
       const row = rows[rowIndex]
       setDragOverRowId(row.id)
 
-      const componentIndex = row.components.findIndex((c) => c.id === over.id)
+      const componentIndex = row.components.findIndex(
+        (c): c is FormComponent => c !== null && c.id === over.id,
+      )
       if (componentIndex !== -1) {
         setIsDraggingOver(true)
 
@@ -159,205 +161,233 @@ export function FormBuilderPage() {
     setIsDraggingOver(false)
     setDragOverRowId(null)
 
+    console.log('over', event)
+
     // Se não houver um destino válido, não faça nada
     if (!over) return
 
-    // Handle dropping a new component from the panel
-    if (active.data.current?.type === 'component-panel') {
-      const componentType = active.data.current.componentType as FormComponentType
-      const newComponent = createComponent(componentType)
-
-      // Verificar se estamos sobre uma linha
+    if (over.data.current?.columnIndex !== undefined) {
+      console.log('Aqui')
+      const newComponent = createComponent(active.data.current?.type as FormComponentType)
       const rowIndex = rows.findIndex((row) => row.id === over.id)
+      console.log('rowIndex', rowIndex)
       if (rowIndex !== -1) {
-        // Verificar se há espaço na linha
-        if (canAddComponentToRow(rows[rowIndex], newComponent.columnSpan)) {
-          const updatedRows = [...rows]
-          updatedRows[rowIndex].components.push(newComponent)
-          setRows(updatedRows)
-
-          toast({
-            title: 'Componente adicionado',
-            description: `${newComponent.type} foi adicionado à linha ${rowIndex + 1}`,
-            duration: 2000,
-          })
-        } else {
-          toast({
-            title: 'Não foi possível adicionar',
-            description: `Não há espaço suficiente na linha ${rowIndex + 1}`,
-            duration: 2000,
-            variant: 'destructive',
-          })
-        }
-        return
-      }
-
-      // Verificar se estamos sobre um componente
-      for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-        const row = rows[rowIndex]
-        const componentIndex = row.components.findIndex((c) => c.id === over.id)
-
-        if (componentIndex !== -1) {
-          // Verificar se há espaço na linha
-          if (!canAddComponentToRow(row, newComponent.columnSpan)) {
-            toast({
-              title: 'Não foi possível adicionar',
-              description: `Não há espaço suficiente na linha ${rowIndex + 1}`,
-              duration: 2000,
-              variant: 'destructive',
-            })
-            return
-          }
-
-          // Verificar se over.rect existe
-          if (!over.rect) {
-            // Se não existir, adicionar ao final
-            const updatedRows = [...rows]
-            updatedRows[rowIndex].components.push(newComponent)
-            setRows(updatedRows)
-            return
-          }
-
-          const overRect = over.rect
-          const overCenter = overRect.top + overRect.height / 2
-          const pointerY = (event.activatorEvent as MouseEvent).clientY
-
-          // Determinar se estamos antes ou depois do componente
-          const position = pointerY < overCenter ? 'before' : 'after'
-          const insertIndex = position === 'before' ? componentIndex : componentIndex + 1
-
-          const updatedRows = [...rows]
-          updatedRows[rowIndex].components.splice(insertIndex, 0, newComponent)
-          setRows(updatedRows)
-
-          toast({
-            title: 'Componente adicionado',
-            description: `${newComponent.type} foi adicionado à linha ${rowIndex + 1}`,
-            duration: 2000,
-          })
-          return
-        }
+        console.log(newComponent)
+        const updatedRows = [...rows]
+        updatedRows[rowIndex].components.splice(over.data.current.columnIndex, 0, newComponent)
+        setRows(updatedRows)
       }
     }
-    // Handle reordering existing components
-    else {
-      // Encontrar o componente em todas as linhas
-      let sourceRowIndex = -1
-      let sourceComponentIndex = -1
 
-      for (let i = 0; i < rows.length; i++) {
-        const componentIndex = rows[i].components.findIndex((c) => c.id === active.id)
-        if (componentIndex !== -1) {
-          sourceRowIndex = i
-          sourceComponentIndex = componentIndex
-          break
-        }
-      }
+    console.log('rows', rows)
 
-      if (sourceRowIndex === -1) return // Componente não encontrado
+    // // Handle dropping a new component from the panel
+    // if (active.data.current?.type === 'component-panel') {
+    //   const componentType = active.data.current.componentType as FormComponentType
+    //   const newComponent = createComponent(componentType)
 
-      const component = rows[sourceRowIndex].components[sourceComponentIndex]
+    //   // Verificar se estamos sobre uma linha
+    //   const rowIndex = rows.findIndex((row) => row.id === over.id)
+    //   if (rowIndex !== -1) {
+    //     // Verificar se há espaço na linha
+    //     if (canAddComponentToRow(rows[rowIndex], newComponent.columnSpan)) {
+    //       const updatedRows = [...rows]
+    //       updatedRows[rowIndex].components.push(newComponent)
+    //       setRows(updatedRows)
 
-      // Verificar se estamos sobre uma linha
-      const targetRowIndex = rows.findIndex((row) => row.id === over.id)
-      if (targetRowIndex !== -1) {
-        // Verificar se há espaço na linha de destino
-        if (canAddComponentToRow(rows[targetRowIndex], component.columnSpan)) {
-          // Remover da linha de origem
-          const updatedRows = [...rows]
-          updatedRows[sourceRowIndex].components.splice(sourceComponentIndex, 1)
+    //       toast({
+    //         title: 'Componente adicionado',
+    //         description: `${newComponent.type} foi adicionado à linha ${rowIndex + 1}`,
+    //         duration: 2000,
+    //       })
+    //     } else {
+    //       toast({
+    //         title: 'Não foi possível adicionar',
+    //         description: `Não há espaço suficiente na linha ${rowIndex + 1}`,
+    //         duration: 2000,
+    //         variant: 'destructive',
+    //       })
+    //     }
+    //     return
+    //   }
 
-          // Adicionar à linha de destino
-          updatedRows[targetRowIndex].components.push(component)
+    //   // Verificar se estamos sobre um componente
+    //   for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+    //     const row = rows[rowIndex]
+    //     const componentIndex = row.components.findIndex(
+    //       (c): c is FormComponent => c !== null && c.id === over.id,
+    //     )
 
-          setRows(updatedRows)
+    //     if (componentIndex !== -1) {
+    //       // Verificar se há espaço na linha
+    //       if (!canAddComponentToRow(row, newComponent.columnSpan)) {
+    //         toast({
+    //           title: 'Não foi possível adicionar',
+    //           description: `Não há espaço suficiente na linha ${rowIndex + 1}`,
+    //           duration: 2000,
+    //           variant: 'destructive',
+    //         })
+    //         return
+    //       }
 
-          toast({
-            title: 'Componente movido',
-            description: `${component.type} foi movido para a linha ${targetRowIndex + 1}`,
-            duration: 2000,
-          })
-        } else {
-          toast({
-            title: 'Não foi possível mover',
-            description: `Não há espaço suficiente na linha ${targetRowIndex + 1}`,
-            duration: 2000,
-            variant: 'destructive',
-          })
-        }
-        return
-      }
+    //       // Verificar se over.rect existe
+    //       if (!over.rect) {
+    //         // Se não existir, adicionar ao final
+    //         const updatedRows = [...rows]
+    //         updatedRows[rowIndex].components.push(newComponent)
+    //         setRows(updatedRows)
+    //         return
+    //       }
 
-      // Verificar se estamos sobre um componente
-      for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-        const row = rows[rowIndex]
-        const targetComponentIndex = row.components.findIndex((c) => c.id === over.id)
+    //       const overRect = over.rect
+    //       const overCenter = overRect.top + overRect.height / 2
+    //       const pointerY = (event.activatorEvent as MouseEvent).clientY
 
-        if (targetComponentIndex !== -1) {
-          // Se estamos na mesma linha, apenas reordenar
-          if (rowIndex === sourceRowIndex) {
-            const updatedRows = [...rows]
-            updatedRows[rowIndex].components = arrayMove(
-              updatedRows[rowIndex].components,
-              sourceComponentIndex,
-              targetComponentIndex,
-            )
-            setRows(updatedRows)
+    //       // Determinar se estamos antes ou depois do componente
+    //       const position = pointerY < overCenter ? 'before' : 'after'
+    //       const insertIndex = position === 'before' ? componentIndex : componentIndex + 1
 
-            toast({
-              title: 'Componente reordenado',
-              description: 'A ordem dos componentes foi atualizada',
-              duration: 2000,
-            })
-          } else {
-            // Verificar se há espaço na linha de destino
-            if (!canAddComponentToRow(row, component.columnSpan)) {
-              toast({
-                title: 'Não foi possível mover',
-                description: `Não há espaço suficiente na linha ${rowIndex + 1}`,
-                duration: 2000,
-                variant: 'destructive',
-              })
-              return
-            }
+    //       const updatedRows = [...rows]
+    //       updatedRows[rowIndex].components.splice(insertIndex, 0, newComponent)
+    //       setRows(updatedRows)
 
-            // Verificar se over.rect existe
-            if (!over.rect) {
-              // Se não existir, adicionar ao final da linha
-              const updatedRows = [...rows]
-              updatedRows[sourceRowIndex].components.splice(sourceComponentIndex, 1)
-              updatedRows[rowIndex].components.push(component)
-              setRows(updatedRows)
-              return
-            }
+    //       toast({
+    //         title: 'Componente adicionado',
+    //         description: `${newComponent.type} foi adicionado à linha ${rowIndex + 1}`,
+    //         duration: 2000,
+    //       })
+    //       return
+    //     }
+    //   }
+    // }
+    // // Handle reordering existing components
+    // else {
+    //   // Encontrar o componente em todas as linhas
+    //   let sourceRowIndex = -1
+    //   let sourceComponentIndex = -1
 
-            const overRect = over.rect
-            const overCenter = overRect.top + overRect.height / 2
-            const pointerY = (event.activatorEvent as MouseEvent).clientY
+    //   for (let i = 0; i < rows.length; i++) {
+    //     const componentIndex = rows[i].components.findIndex(
+    //       (c): c is FormComponent => c !== null && c.id === active.id,
+    //     )
+    //     if (componentIndex !== -1) {
+    //       sourceRowIndex = i
+    //       sourceComponentIndex = componentIndex
+    //       break
+    //     }
+    //   }
 
-            // Determinar se estamos antes ou depois do componente
-            const position = pointerY < overCenter ? 'before' : 'after'
-            const insertIndex =
-              position === 'before' ? targetComponentIndex : targetComponentIndex + 1
+    //   if (sourceRowIndex === -1) return // Componente não encontrado
 
-            const updatedRows = [...rows]
-            // Remover da linha de origem
-            updatedRows[sourceRowIndex].components.splice(sourceComponentIndex, 1)
-            // Adicionar à linha de destino
-            updatedRows[rowIndex].components.splice(insertIndex, 0, component)
+    //   const component = rows[sourceRowIndex].components[sourceComponentIndex]
 
-            setRows(updatedRows)
+    //   // Verificar se estamos sobre uma linha
+    //   const targetRowIndex = rows.findIndex((row) => row.id === over.id)
+    //   if (targetRowIndex !== -1) {
+    //     console.log()
+    //     // Verificar se há espaço na linha de destino
+    //     if (component && canAddComponentToRow(rows[targetRowIndex], component.columnSpan)) {
+    //       // Remover da linha de origem
+    //       const updatedRows = [...rows]
+    //       updatedRows[sourceRowIndex].components.splice(sourceComponentIndex, 1)
 
-            toast({
-              title: 'Componente movido',
-              description: `${component.type} foi movido para a linha ${rowIndex + 1}`,
-              duration: 2000,
-            })
-            return
-          }
-        }
-      }
-    }
+    //       // Adicionar à linha de destino
+    //       updatedRows[targetRowIndex].components.push(component)
+
+    //       setRows(updatedRows)
+
+    //       toast({
+    //         title: 'Componente movido',
+    //         description: component
+    //           ? `${component.type} foi movido para a linha ${targetRowIndex + 1}`
+    //           : 'Componente movido',
+    //         duration: 2000,
+    //       })
+    //     } else {
+    //       toast({
+    //         title: 'Não foi possível mover',
+    //         description: `Não há espaço suficiente na linha ${targetRowIndex + 1}`,
+    //         duration: 2000,
+    //         variant: 'destructive',
+    //       })
+    //     }
+    //     return
+    //   }
+
+    //   // Verificar se estamos sobre um componente
+    //   for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+    //     const row = rows[rowIndex]
+    //     const targetComponentIndex = row.components.findIndex(
+    //       (c): c is FormComponent => c !== null && c.id === over.id,
+    //     )
+
+    //     if (targetComponentIndex !== -1) {
+    //       // Se estamos na mesma linha, apenas reordenar
+    //       if (rowIndex === sourceRowIndex) {
+    //         const updatedRows = [...rows]
+    //         updatedRows[rowIndex].components = arrayMove(
+    //           updatedRows[rowIndex].components,
+    //           sourceComponentIndex,
+    //           targetComponentIndex,
+    //         )
+    //         setRows(updatedRows)
+
+    //         toast({
+    //           title: 'Componente reordenado',
+    //           description: 'A ordem dos componentes foi atualizada',
+    //           duration: 2000,
+    //         })
+    //       } else {
+    //         // Verificar se há espaço na linha de destino
+    //         if (!component || !canAddComponentToRow(row, component.columnSpan)) {
+    //           toast({
+    //             title: 'Não foi possível mover',
+    //             description: `Não há espaço suficiente na linha ${rowIndex + 1}`,
+    //             duration: 2000,
+    //             variant: 'destructive',
+    //           })
+    //           return
+    //         }
+
+    //         // Verificar se over.rect existe
+    //         if (!over.rect) {
+    //           // Se não existir, adicionar ao final da linha
+    //           const updatedRows = [...rows]
+    //           updatedRows[sourceRowIndex].components.splice(sourceComponentIndex, 1)
+    //           updatedRows[rowIndex].components.push(component)
+    //           setRows(updatedRows)
+    //           return
+    //         }
+
+    //         const overRect = over.rect
+    //         const overCenter = overRect.top + overRect.height / 2
+    //         const pointerY = (event.activatorEvent as MouseEvent).clientY
+
+    //         // Determinar se estamos antes ou depois do componente
+    //         const position = pointerY < overCenter ? 'before' : 'after'
+    //         const insertIndex =
+    //           position === 'before' ? targetComponentIndex : targetComponentIndex + 1
+
+    //         const updatedRows = [...rows]
+    //         // Remover da linha de origem
+    //         updatedRows[sourceRowIndex].components.splice(sourceComponentIndex, 1)
+    //         // Adicionar à linha de destino
+    //         updatedRows[rowIndex].components.splice(insertIndex, 0, component)
+
+    //         setRows(updatedRows)
+
+    //         toast({
+    //           title: 'Componente movido',
+    //           description: component
+    //             ? `${component.type} foi movido para a linha ${rowIndex + 1}`
+    //             : 'Componente movido',
+    //           duration: 2000,
+    //         })
+    //         return
+    //       }
+    //     }
+    //   }
+    // }
   }
 
   const handleUpdateComponent = (
@@ -366,19 +396,26 @@ export function FormBuilderPage() {
     updates: Partial<FormComponent>,
   ) => {
     const updatedRows = [...rows]
-    const componentIndex = updatedRows[rowIndex].components.findIndex((c) => c.id === componentId)
+    const componentIndex = updatedRows[rowIndex].components.findIndex(
+      (c): c is FormComponent => c !== null && c.id === componentId,
+    )
 
     if (componentIndex !== -1) {
-      updatedRows[rowIndex].components[componentIndex] = {
-        ...updatedRows[rowIndex].components[componentIndex],
-        ...updates,
+      const existingComponent = updatedRows[rowIndex].components[componentIndex]
+      if (existingComponent) {
+        updatedRows[rowIndex].components[componentIndex] = {
+          ...existingComponent,
+          ...updates,
+        } as FormComponent
       }
       setRows(updatedRows)
     }
   }
 
   // Criar uma lista plana de IDs para o SortableContext
-  const allComponentIds = rows.flatMap((row) => row.components.map((c) => c.id))
+  const allComponentIds = rows.flatMap((row) =>
+    row.components.filter((c): c is FormComponent => c !== null).map((c) => c.id),
+  )
   const allRowIds = rows.map((row) => row.id)
 
   return (

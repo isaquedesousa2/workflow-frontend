@@ -66,7 +66,7 @@ export function createRow(columns = 1): FormRow {
   return {
     id: `row-${Math.random().toString(36).substring(2, 9)}`,
     columns,
-    components: [],
+    components: [null, null, null, null],
   }
 }
 
@@ -87,13 +87,19 @@ export function getColumnClass(span: ColumnSpan): string {
 
 export function canAddComponentToRow(row: FormRow, componentSpan: ColumnSpan): boolean {
   // Calcular o total de colunas já ocupadas na linha
-  const usedColumns = row.components.reduce((total, component) => total + component.columnSpan, 0)
+  const usedColumns = row.components.reduce(
+    (total, component) => total + (component?.columnSpan ?? 0),
+    0,
+  )
 
   // Verificar se há espaço suficiente para o novo componente
   return usedColumns + componentSpan <= row.columns
 }
 
 export function getAvailableColumnsInRow(row: FormRow): number {
-  const usedColumns = row.components.reduce((total, component) => total + component.columnSpan, 0)
+  const usedColumns = row.components.reduce(
+    (total, component) => total + (component?.columnSpan ?? 0),
+    0,
+  )
   return row.columns - usedColumns
 }

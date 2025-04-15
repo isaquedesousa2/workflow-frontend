@@ -46,7 +46,7 @@ export default function FormBuilder() {
     } else {
       // Encontrar o componente em todas as linhas
       for (const row of rows) {
-        const component = row.components.find((c) => c.id === id)
+        const component = row.components.find((c) => c?.id === id)
         if (component) {
           setActiveComponent(component)
           break
@@ -102,7 +102,7 @@ export default function FormBuilder() {
       const row = rows[rowIndex]
       setDragOverRowId(row.id)
 
-      const componentIndex = row.components.findIndex((c) => c.id === over.id)
+      const componentIndex = row.components.findIndex((c) => c?.id === over.id)
       if (componentIndex !== -1) {
         setIsDraggingOver(true)
 
@@ -193,7 +193,7 @@ export default function FormBuilder() {
       // Verificar se estamos sobre um componente
       for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
         const row = rows[rowIndex]
-        const componentIndex = row.components.findIndex((c) => c.id === over.id)
+        const componentIndex = row.components.findIndex((c) => c?.id === over.id)
 
         if (componentIndex !== -1) {
           // Verificar se há espaço na linha
@@ -244,7 +244,7 @@ export default function FormBuilder() {
       let sourceComponentIndex = -1
 
       for (let i = 0; i < rows.length; i++) {
-        const componentIndex = rows[i].components.findIndex((c) => c.id === active.id)
+        const componentIndex = rows[i].components.findIndex((c) => c?.id === active.id)
         if (componentIndex !== -1) {
           sourceRowIndex = i
           sourceComponentIndex = componentIndex
@@ -260,7 +260,7 @@ export default function FormBuilder() {
       const targetRowIndex = rows.findIndex((row) => row.id === over.id)
       if (targetRowIndex !== -1) {
         // Verificar se há espaço na linha de destino
-        if (canAddComponentToRow(rows[targetRowIndex], component.columnSpan)) {
+        if (component && canAddComponentToRow(rows[targetRowIndex], component.columnSpan)) {
           // Remover da linha de origem
           const updatedRows = [...rows]
           updatedRows[sourceRowIndex].components.splice(sourceComponentIndex, 1)
@@ -272,7 +272,9 @@ export default function FormBuilder() {
 
           toast({
             title: 'Componente movido',
-            description: `${component.type} foi movido para a linha ${targetRowIndex + 1}`,
+            description: component
+              ? `${component.type} foi movido para a linha ${targetRowIndex + 1}`
+              : 'Componente movido',
             duration: 2000,
           })
         } else {
@@ -289,7 +291,7 @@ export default function FormBuilder() {
       // Verificar se estamos sobre um componente
       for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
         const row = rows[rowIndex]
-        const targetComponentIndex = row.components.findIndex((c) => c.id === over.id)
+        const targetComponentIndex = row.components.findIndex((c) => c?.id === over.id)
 
         if (targetComponentIndex !== -1) {
           // Se estamos na mesma linha, apenas reordenar
@@ -309,7 +311,7 @@ export default function FormBuilder() {
             })
           } else {
             // Verificar se há espaço na linha de destino
-            if (!canAddComponentToRow(row, component.columnSpan)) {
+            if (component && !canAddComponentToRow(row, component.columnSpan)) {
               toast({
                 title: 'Não foi possível mover',
                 description: `Não há espaço suficiente na linha ${rowIndex + 1}`,
@@ -348,7 +350,9 @@ export default function FormBuilder() {
 
             toast({
               title: 'Componente movido',
-              description: `${component.type} foi movido para a linha ${rowIndex + 1}`,
+              description: component
+                ? `${component.type} foi movido para a linha ${rowIndex + 1}`
+                : 'Componente movido',
               duration: 2000,
             })
             return
@@ -364,19 +368,24 @@ export default function FormBuilder() {
     updates: Partial<FormComponent>,
   ) => {
     const updatedRows = [...rows]
-    const componentIndex = updatedRows[rowIndex].components.findIndex((c) => c.id === componentId)
+    const componentIndex = updatedRows[rowIndex].components.findIndex((c) => c?.id === componentId)
 
     if (componentIndex !== -1) {
+      const existingComponent = updatedRows[rowIndex].components[componentIndex]
+      if (!existingComponent) return
+
       updatedRows[rowIndex].components[componentIndex] = {
-        ...updatedRows[rowIndex].components[componentIndex],
+        ...existingComponent,
         ...updates,
-      }
+      } as FormComponent
       setRows(updatedRows)
     }
   }
 
   // Criar uma lista plana de IDs para o SortableContext
-  const allComponentIds = rows.flatMap((row) => row.components.map((c) => c.id))
+  const allComponentIds = rows.flatMap((row) =>
+    row.components.map((c) => c?.id).filter((id): id is string => id !== undefined),
+  )
   const allRowIds = rows.map((row) => row.id)
 
   return (

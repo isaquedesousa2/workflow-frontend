@@ -9,6 +9,7 @@ import { motion } from 'framer-motion'
 import { SortableFormComponent } from './SortableForm'
 import { getAvailableColumnsInRow } from '../utils'
 import { Badge } from '@/components/ui/badge'
+import { useState } from 'react'
 
 interface FormRowComponentProps {
   row: FormRow
@@ -20,6 +21,27 @@ interface FormRowComponentProps {
   dropIndicator: DropIndicator
   isActive: boolean
   rowCount: number
+}
+
+const ColumnDroppable = ({ index, rowId }: { index: number; rowId: string }) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `${rowId}-column-${index}`,
+    data: {
+      columnIndex: index,
+    },
+  })
+
+  return (
+    <div key={index} className="col-span-1" ref={setNodeRef} data-column-index={index}>
+      <div
+        className={`border-2 border-dashed rounded-sm p-6 text-center text-muted-foreground transition-colors ${
+          isOver ? 'bg-primary/5 border-primary/30' : ''
+        }`}
+      >
+        <div className="text-sm">Arraste para esta coluna</div>
+      </div>
+    </div>
+  )
 }
 
 export function FormRowComponent({
@@ -76,7 +98,7 @@ export function FormRowComponent({
               size="icon"
               className="h-8 w-8"
               onClick={() => onUpdateColumns(Math.max(1, row.columns - 1))}
-              disabled={row.columns <= 1 || row.columns === row.components.length}
+              disabled={row.columns <= 1}
               title="Diminuir colunas"
             >
               <Minus className="h-4 w-4" />
@@ -105,40 +127,9 @@ export function FormRowComponent({
           </div>
         </CardHeader>
         <CardContent className="p-3 pt-0">
-          {row.components.length === 0 ? (
-            <div
-              className={`border-2 border-dashed rounded-md p-6 text-center text-muted-foreground transition-colors ${
-                isActive ? 'bg-primary/5 border-primary/30' : ''
-              }`}
-            >
-              {isActive ? (
-                <div className="flex flex-col items-center gap-2">
-                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="text-primary animate-bounce"
-                    >
-                      <path d="M12 19V5" />
-                      <path d="m5 12 7-7 7 7" />
-                    </svg>
-                  </div>
-                  <div className="text-sm text-primary">Solte para adicionar</div>
-                </div>
-              ) : (
-                <div className="text-sm">Arraste componentes para esta linha</div>
-              )}
-            </div>
-          ) : (
-            <div className={`grid ${gridColsMap[row.columns]} gap-3`}>
-              {row.components.map((component, componentIndex) => (
+          <div className={`grid ${gridColsMap[row.columns]} gap-3`}>
+            {row.components.map((component, componentIndex) =>
+              component ? (
                 <div key={component.id} className={`col-span-${component.columnSpan} relative`}>
                   {dropIndicator.isVisible &&
                     dropIndicator.rowIndex === rowIndex &&
@@ -169,9 +160,15 @@ export function FormRowComponent({
                       />
                     )}
                 </div>
-              ))}
-            </div>
-          )}
+              ) : (
+                componentIndex + 1 <= row.columns && (
+                  <div key={componentIndex} className="col-span-1 relative">
+                    <ColumnDroppable key={componentIndex} index={componentIndex} rowId={row.id} />
+                  </div>
+                )
+              ),
+            )}
+          </div>
         </CardContent>
       </Card>
     </motion.div>

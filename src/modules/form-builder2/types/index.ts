@@ -6,7 +6,7 @@ export type FormComponentType =
   | 'radio'
   | 'button'
   | 'heading'
-
+  | 'none'
 export type ColumnSpan = 1 | 2 | 3 | 4
 
 export interface FormComponent {
@@ -23,7 +23,7 @@ export interface FormComponent {
 export interface FormRow {
   id: string
   columns: number
-  components: FormComponent[]
+  components: (FormComponent | null)[]
 }
 
 export interface DropIndicator {

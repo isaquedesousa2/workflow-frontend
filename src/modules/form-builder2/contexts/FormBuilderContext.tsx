@@ -69,7 +69,7 @@ export const FormBuilderProvider = ({ children }: { children: React.ReactNode })
       return
     }
 
-    if (columnCount < row.components.length) {
+    if (columnCount < row.components.filter(Boolean).length) {
       toast({
         title: 'Não é possível atualizar',
         description: 'O número de colunas não pode ser menor que o número de componentes',
