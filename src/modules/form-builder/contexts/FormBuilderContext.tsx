@@ -106,15 +106,18 @@ export function FormBuilderProvider({ children }: { children: ReactNode }) {
   }
 
   const removeField = (fieldId: string) => {
-    setRows(
-      rows.map((row) => ({
+    console.log('Removendo campo:', fieldId) // Para debug
+    setRows((prevRows) => {
+      const newRows = prevRows.map((row) => ({
         ...row,
         columns: row.columns.map((column) => ({
           ...column,
           fields: column.fields.filter((field) => field.id !== fieldId),
         })),
-      })),
-    )
+      }))
+      console.log('Novas linhas:', newRows) // Para debug
+      return newRows
+    })
 
     // Se o campo removido for o ativo, limpe o campo ativo
     if (activeField === fieldId) {

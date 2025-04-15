@@ -1,9 +1,13 @@
-import FormBuilderModule from '@/modules/form-builder/FormBuilderModule'
+'use client'
+import { Toaster } from '@/components/ui/toaster'
+import { FormBuilderProvider } from '@/modules/form-builder/contexts/FormBuilderContext'
+import { FormBuilderPage } from '@/modules/form-builder2/pages/FormBuilder'
 
-export default function FormBuilderPage() {
+export default function Page() {
   return (
-    <div className="h-screen">
-      <FormBuilderModule />
-    </div>
+    <FormBuilderProvider>
+      <FormBuilderPage />
+      <Toaster />
+    </FormBuilderProvider>
   )
 }

@@ -18,7 +18,10 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { useFormBuilder } from '../contexts/FormBuilderContext'
 import type { FormField, FieldOption } from '../types/form.types'
-import { TextInput } from '@/modules/form-builder/components/inputs/TextInput'
+import { TextInput } from './inputs/TextInput'
+import { SelectInput } from './inputs/SelectInput'
+import { DateInput } from './inputs/DateInput'
+import { AddressInput } from './inputs/AddressInput'
 
 interface FieldRendererProps {
   field: FormField
@@ -73,64 +76,33 @@ export function FormFieldRenderer({
     switch (field.type) {
       case 'text':
       case 'email':
-      case 'number':
       case 'phone':
-      case 'address':
-      case 'city':
-      case 'state':
-      case 'country':
-        return <TextInput field={field} />
       case 'textarea':
         return <TextInput field={field} />
-      case 'select':
-        return (
-          <Select disabled={isPreview}>
-            <SelectTrigger>
-              <SelectValue placeholder={field.placeholder || 'Selecione uma opção'} />
-            </SelectTrigger>
-            <SelectContent>
-              {(field.options || defaultOptions).map((option: FieldOption) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )
-      case 'checkbox':
-        return (
-          <div className="space-y-2">
-            {(field.options || defaultOptions).map((option: FieldOption) => (
-              <div key={option.value} className="flex items-center space-x-2">
-                <Checkbox id={`${field.id}-${option.value}`} disabled={isPreview} />
-                <Label htmlFor={`${field.id}-${option.value}`}>{option.label}</Label>
-              </div>
-            ))}
-          </div>
-        )
-      case 'radio':
-        return (
-          <RadioGroup disabled={isPreview}>
-            {(field.options || defaultOptions).map((option: FieldOption) => (
-              <div key={option.value} className="flex items-center space-x-2">
-                <RadioGroupItem value={option.value} id={`${field.id}-${option.value}`} />
-                <Label htmlFor={`${field.id}-${option.value}`}>{option.label}</Label>
-              </div>
-            ))}
-          </RadioGroup>
-        )
       case 'date':
-        return <Input type="date" disabled={isPreview} />
+        return <DateInput field={field} />
+      case 'select':
+      case 'radio':
+      case 'checkbox':
+        return <SelectInput field={field} />
+      case 'address':
+        return <AddressInput field={field} />
       default:
-        return <Input disabled={isPreview} />
+        return <TextInput field={field} />
     }
+  }
+
+  const handleRemoveField = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    console.log('Tentando remover campo:', field.id) // Para debug
+    removeField(field.id)
   }
 
   if (isPreview) {
     return (
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-1.5">
-          <Label htmlFor={field.id}>{field.label}</Label>
           {field.validation?.required && <span className="text-red-500">*</span>}
         </div>
         {renderFieldInput()}
@@ -166,8 +138,8 @@ export function FormFieldRenderer({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
-              onClick={() => removeField(field.id)}
+              className="h-7 w-7 hover:text-red-500"
+              onClick={handleRemoveField}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
