@@ -2,7 +2,7 @@
 
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import type { ColumnSpan, FormComponent } from '../types'
+import type { FormComponent } from '../types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -10,36 +10,44 @@ import { GripVertical, Trash2, Settings } from 'lucide-react'
 import { useState } from 'react'
 import { ComponentSettings } from './FormSettings'
 import { getColumnClass } from '../utils'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface SortableFormComponentProps {
+  rowId: string
   component: FormComponent
+  componentIndex: number
   onRemove: (id: string) => void
   onUpdate: (id: string, updates: Partial<FormComponent>) => void
   maxColumnSpan: number
+  dropIndicator: {
+    isVisible: boolean
+    rowIndex: number
+    componentIndex: number
+  }
 }
 
 export function SortableFormComponent({
+  rowId,
   component,
+  componentIndex,
   onRemove,
   onUpdate,
-  maxColumnSpan,
+  dropIndicator,
 }: SortableFormComponentProps) {
   const [showSettings, setShowSettings] = useState(false)
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: component.id,
+    data: {
+      type: 'component-sortable',
+      rowId: rowId,
+      columnIndex: componentIndex,
+    },
   })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-  }
-
-  const handleColumnSpanChange = (span: ColumnSpan) => {
-    // Não permitir que o span seja maior que o maxColumnSpan
-    const newSpan = Math.min(span, maxColumnSpan) as ColumnSpan
-    onUpdate(component.id, { columnSpan: newSpan })
   }
 
   return (
@@ -48,6 +56,10 @@ export function SortableFormComponent({
       style={style}
       className={`relative ${getColumnClass(component.columnSpan)} ${
         isDragging ? 'z-10 opacity-50 scale-105 shadow-xl' : ''
+      } ${
+        dropIndicator.isVisible && dropIndicator.componentIndex === componentIndex
+          ? 'border-2 border-dashed border-purple-500'
+          : ''
       } transition-all duration-200`}
     >
       <motion.div
@@ -93,17 +105,19 @@ export function SortableFormComponent({
         </div>
 
         {showSettings && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <ComponentSettings
-              component={component}
-              onUpdate={(updates) => onUpdate(component.id, updates)}
-            />
-          </motion.div>
+          <AnimatePresence>
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ComponentSettings
+                component={component}
+                onUpdate={(updates) => onUpdate(component.id, updates)}
+              />
+            </motion.div>
+          </AnimatePresence>
         )}
       </CardContent>
     </Card>

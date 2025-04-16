@@ -7,9 +7,9 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Trash2, Plus, Minus } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { SortableFormComponent } from './SortableForm'
-import { getAvailableColumnsInRow } from '../utils'
+import { getAvailableColumnsInRow, getAvailableIndices } from '../utils'
 import { Badge } from '@/components/ui/badge'
-import { useState } from 'react'
+import { useEffect } from 'react'
 
 interface FormRowComponentProps {
   row: FormRow
@@ -17,7 +17,8 @@ interface FormRowComponentProps {
   onRemoveComponent: (componentId: string) => void
   onUpdateComponent: (componentId: string, updates: Partial<FormComponent>) => void
   onRemoveRow: () => void
-  onUpdateColumns: (columns: number) => void
+  onRemoveRowColumns: () => void
+  onAddRowColumns: () => void
   dropIndicator: DropIndicator
   isActive: boolean
   rowCount: number
@@ -27,6 +28,7 @@ const ColumnDroppable = ({ index, rowId }: { index: number; rowId: string }) => 
   const { setNodeRef, isOver } = useDroppable({
     id: `${rowId}-column-${index}`,
     data: {
+      rowId,
       columnIndex: index,
     },
   })
@@ -50,17 +52,15 @@ export function FormRowComponent({
   onRemoveComponent,
   onUpdateComponent,
   onRemoveRow,
-  onUpdateColumns,
+  onRemoveRowColumns,
+  onAddRowColumns,
   dropIndicator,
   isActive,
   rowCount,
 }: FormRowComponentProps) {
-  const { setNodeRef } = useDroppable({
-    id: row.id,
-  })
-
+  const { setNodeRef } = useDroppable({ id: row.id })
   const availableColumns = getAvailableColumnsInRow(row)
-
+  const availableIndices = getAvailableIndices(row)
   const gridColsMap: Record<number, string> = {
     1: 'grid-cols-1',
     2: 'grid-cols-2',
@@ -97,8 +97,8 @@ export function FormRowComponent({
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => onUpdateColumns(Math.max(1, row.columns - 1))}
-              disabled={row.columns <= 1}
+              onClick={() => onRemoveRowColumns()}
+              disabled={availableColumns === 0 || row.columns === 1}
               title="Diminuir colunas"
             >
               <Minus className="h-4 w-4" />
@@ -108,7 +108,7 @@ export function FormRowComponent({
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => onUpdateColumns(Math.min(4, row.columns + 1))}
+              onClick={() => onAddRowColumns()}
               disabled={row.columns >= 4}
               title="Aumentar colunas"
             >
@@ -130,38 +130,19 @@ export function FormRowComponent({
           <div className={`grid ${gridColsMap[row.columns]} gap-3`}>
             {row.components.map((component, componentIndex) =>
               component ? (
-                <div key={component.id} className={`col-span-${component.columnSpan} relative`}>
-                  {dropIndicator.isVisible &&
-                    dropIndicator.rowIndex === rowIndex &&
-                    dropIndicator.componentIndex === componentIndex &&
-                    dropIndicator.position === 'before' && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: '100%' }}
-                        className="absolute -left-1.5 top-0 bottom-0 w-1.5 bg-purple-500 rounded-md z-10"
-                        layoutId="dropIndicator"
-                      />
-                    )}
+                <div key={componentIndex} className={`col-span-${component.columnSpan} relative`}>
                   <SortableFormComponent
+                    rowId={row.id}
                     component={component}
+                    dropIndicator={dropIndicator}
+                    componentIndex={componentIndex}
                     onRemove={onRemoveComponent}
                     onUpdate={onUpdateComponent}
                     maxColumnSpan={row.columns}
                   />
-                  {dropIndicator.isVisible &&
-                    dropIndicator.rowIndex === rowIndex &&
-                    dropIndicator.componentIndex === componentIndex &&
-                    dropIndicator.position === 'after' && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: '100%' }}
-                        className="absolute -right-1.5 top-0 bottom-0 w-1.5 bg-purple-500 rounded-md z-10"
-                        layoutId="dropIndicator"
-                      />
-                    )}
                 </div>
               ) : (
-                componentIndex + 1 <= row.columns && (
+                availableIndices.includes(componentIndex) && (
                   <div key={componentIndex} className="col-span-1 relative">
                     <ColumnDroppable key={componentIndex} index={componentIndex} rowId={row.id} />
                   </div>

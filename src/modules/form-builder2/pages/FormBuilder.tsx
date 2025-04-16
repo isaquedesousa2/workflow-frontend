@@ -22,10 +22,18 @@ import { FormBuilderHeader } from '@/components/FormBuilderHeader'
 import { ContainerMain } from '@/components/ContainerMain'
 
 export function FormBuilderPage() {
-  const { formName, setFormName } = useFormBuilder()
-  const { rows, setRows, addRow, removeRow, updateRowColumns, addFieldToRow, removeField } =
-    useFormBuilder()
-  const [activeId, setActiveId] = useState<string | null>(null)
+  const {
+    rows,
+    formName,
+    setFormName,
+    setRows,
+    addRow,
+    removeRow,
+    removeRowColumns,
+    addRowColumns,
+    addFieldToRow,
+    removeField,
+  } = useFormBuilder()
   const [activeComponent, setActiveComponent] = useState<FormComponent | null>(null)
   const [dropIndicator, setDropIndicator] = useState<DropIndicator>({
     isVisible: false,
@@ -39,7 +47,6 @@ export function FormBuilderPage() {
 
   const handleDragStart = (event: DragStartEvent) => {
     const { id, data } = event.active
-    setActiveId(id.toString())
 
     if (data.current?.type === 'component-panel') {
       const componentType = data.current.componentType as FormComponentType
@@ -61,26 +68,38 @@ export function FormBuilderPage() {
     const { active, over } = event
 
     if (!over) {
-      setDropIndicator({ isVisible: false, rowIndex: 0, componentIndex: 0, position: 'before' })
-      setDragOverRowId(null)
-      setIsDraggingOver(false)
+      if (dropIndicator.isVisible) {
+        setDropIndicator({ isVisible: false, rowIndex: 0, componentIndex: 0, position: 'before' })
+      }
+      if (dragOverRowId) {
+        setDragOverRowId(null)
+      }
+      if (isDraggingOver) {
+        setIsDraggingOver(false)
+      }
       return
     }
 
     // Verificar se estamos sobre uma linha
     const rowIndex = rows.findIndex((row) => row.id === over.id)
     if (rowIndex !== -1) {
-      setDragOverRowId(rows[rowIndex].id)
-      setIsDraggingOver(true)
+      if (dragOverRowId !== rows[rowIndex].id) {
+        setDragOverRowId(rows[rowIndex].id)
+      }
+      if (!isDraggingOver) {
+        setIsDraggingOver(true)
+      }
 
       // Se a linha estiver vazia, mostrar indicador no centro
       if (rows[rowIndex].components.length === 0) {
-        setDropIndicator({
-          isVisible: true,
-          rowIndex,
-          componentIndex: 0,
-          position: 'before',
-        })
+        if (!dropIndicator.isVisible || dropIndicator.rowIndex !== rowIndex) {
+          setDropIndicator({
+            isVisible: true,
+            rowIndex,
+            componentIndex: 0,
+            position: 'before',
+          })
+        }
         return
       }
 
@@ -90,8 +109,14 @@ export function FormBuilderPage() {
         const newComponent = createComponent(componentType)
 
         if (!canAddComponentToRow(rows[rowIndex], newComponent.columnSpan)) {
-          // Não há espaço suficiente na linha
-          setDropIndicator({ isVisible: false, rowIndex: 0, componentIndex: 0, position: 'before' })
+          if (dropIndicator.isVisible) {
+            setDropIndicator({
+              isVisible: false,
+              rowIndex: 0,
+              componentIndex: 0,
+              position: 'before',
+            })
+          }
           return
         }
       }
@@ -99,16 +124,19 @@ export function FormBuilderPage() {
       return
     }
 
-    // Verificar se estamos sobre um componente
     for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
       const row = rows[rowIndex]
-      setDragOverRowId(row.id)
+      if (dragOverRowId !== row.id) {
+        setDragOverRowId(row.id)
+      }
 
       const componentIndex = row.components.findIndex(
         (c): c is FormComponent => c !== null && c.id === over.id,
       )
       if (componentIndex !== -1) {
-        setIsDraggingOver(true)
+        if (!isDraggingOver) {
+          setIsDraggingOver(true)
+        }
 
         // Verificar se over.rect existe
         if (!over.rect) {
@@ -129,265 +157,107 @@ export function FormBuilderPage() {
 
           // Se não houver espaço suficiente, não mostrar o indicador
           if (!canAddComponentToRow(row, newComponent.columnSpan)) {
-            setDropIndicator({
-              isVisible: false,
-              rowIndex: 0,
-              componentIndex: 0,
-              position: 'before',
-            })
+            if (dropIndicator.isVisible) {
+              setDropIndicator({
+                isVisible: false,
+                rowIndex: 0,
+                componentIndex: 0,
+                position: 'before',
+              })
+            }
             return
           }
         }
 
-        setDropIndicator({
-          isVisible: true,
-          rowIndex,
-          componentIndex,
-          position,
-        })
+        if (
+          !dropIndicator.isVisible ||
+          dropIndicator.rowIndex !== rowIndex ||
+          dropIndicator.componentIndex !== componentIndex ||
+          dropIndicator.position !== position
+        ) {
+          setDropIndicator({
+            isVisible: true,
+            rowIndex,
+            componentIndex,
+            position,
+          })
+        }
         return
       }
     }
 
-    setDropIndicator({ isVisible: false, rowIndex: 0, componentIndex: 0, position: 'before' })
+    if (dropIndicator.isVisible) {
+      setDropIndicator({ isVisible: false, rowIndex: 0, componentIndex: 0, position: 'before' })
+    }
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
 
-    setActiveId(null)
     setActiveComponent(null)
     setDropIndicator({ isVisible: false, rowIndex: 0, componentIndex: 0, position: 'before' })
     setIsDraggingOver(false)
     setDragOverRowId(null)
 
-    console.log('over', event)
-
-    // Se não houver um destino válido, não faça nada
     if (!over) return
 
-    if (over.data.current?.columnIndex !== undefined) {
-      console.log('Aqui')
-      const newComponent = createComponent(active.data.current?.type as FormComponentType)
-      const rowIndex = rows.findIndex((row) => row.id === over.id)
-      console.log('rowIndex', rowIndex)
-      if (rowIndex !== -1) {
-        console.log(newComponent)
+    if (active.data.current?.type === 'component-sortable') {
+      const rowIndex = rows.findIndex((row) => row.id === over.data.current?.rowId)
+      if (rowIndex === -1) return
+
+      const row = rows[rowIndex]
+      const sourceIndex = row.components.findIndex((component) => component?.id === active.id)
+      const targetIndex = over.data.current?.columnIndex
+
+      if (active.data.current.rowId !== over.data.current?.rowId) {
+        const sourceRowActiveIndex = rows.findIndex((row) => row.id === active.data.current?.rowId)
+        const sourceRowActiveComponentIndex = active.data.current.columnIndex
+
+        const sourceRowOverIndex = rows.findIndex(
+          (component) => component?.id === over.data.current?.rowId,
+        )
+        const sourceRowOverComponentIndex = over.data.current?.columnIndex
+
         const updatedRows = [...rows]
-        updatedRows[rowIndex].components.splice(over.data.current.columnIndex, 0, newComponent)
+        const tempActive =
+          updatedRows[sourceRowActiveIndex].components[sourceRowActiveComponentIndex]
+        const tempOver = updatedRows[sourceRowOverIndex].components[targetIndex]
+
+        updatedRows[sourceRowOverIndex].components[sourceRowOverComponentIndex] = tempActive
+        updatedRows[sourceRowActiveIndex].components[sourceRowActiveComponentIndex] = tempOver
+        setRows(updatedRows)
+
+        // const sourceRowComponents = rows[sourceRowIndex].components
+        // const component = rows[sourceRowIndex].components[sourceIndex]
+        // const updatedRows = [...rows]
+        // console.log(component)
+        // updatedRows[rowIndex].components[targetIndex] = component
+        // setRows(updatedRows)
+      }
+
+      if (sourceIndex !== -1 && targetIndex !== undefined) {
+        const updatedRows = [...rows]
+
+        const temp = updatedRows[rowIndex].components[sourceIndex]
+
+        updatedRows[rowIndex].components[sourceIndex] =
+          updatedRows[rowIndex].components[targetIndex]
+        updatedRows[rowIndex].components[targetIndex] = temp
+
         setRows(updatedRows)
       }
     }
 
-    console.log('rows', rows)
+    if (active.data.current?.type === 'component-panel') {
+      if (over.data.current?.columnIndex !== undefined) {
+        const newComponent = createComponent(
+          active.data.current?.componentType as FormComponentType,
+        )
+        const rowIndex = rows.findIndex((row) => row.id === over.data.current?.rowId)
 
-    // // Handle dropping a new component from the panel
-    // if (active.data.current?.type === 'component-panel') {
-    //   const componentType = active.data.current.componentType as FormComponentType
-    //   const newComponent = createComponent(componentType)
-
-    //   // Verificar se estamos sobre uma linha
-    //   const rowIndex = rows.findIndex((row) => row.id === over.id)
-    //   if (rowIndex !== -1) {
-    //     // Verificar se há espaço na linha
-    //     if (canAddComponentToRow(rows[rowIndex], newComponent.columnSpan)) {
-    //       const updatedRows = [...rows]
-    //       updatedRows[rowIndex].components.push(newComponent)
-    //       setRows(updatedRows)
-
-    //       toast({
-    //         title: 'Componente adicionado',
-    //         description: `${newComponent.type} foi adicionado à linha ${rowIndex + 1}`,
-    //         duration: 2000,
-    //       })
-    //     } else {
-    //       toast({
-    //         title: 'Não foi possível adicionar',
-    //         description: `Não há espaço suficiente na linha ${rowIndex + 1}`,
-    //         duration: 2000,
-    //         variant: 'destructive',
-    //       })
-    //     }
-    //     return
-    //   }
-
-    //   // Verificar se estamos sobre um componente
-    //   for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-    //     const row = rows[rowIndex]
-    //     const componentIndex = row.components.findIndex(
-    //       (c): c is FormComponent => c !== null && c.id === over.id,
-    //     )
-
-    //     if (componentIndex !== -1) {
-    //       // Verificar se há espaço na linha
-    //       if (!canAddComponentToRow(row, newComponent.columnSpan)) {
-    //         toast({
-    //           title: 'Não foi possível adicionar',
-    //           description: `Não há espaço suficiente na linha ${rowIndex + 1}`,
-    //           duration: 2000,
-    //           variant: 'destructive',
-    //         })
-    //         return
-    //       }
-
-    //       // Verificar se over.rect existe
-    //       if (!over.rect) {
-    //         // Se não existir, adicionar ao final
-    //         const updatedRows = [...rows]
-    //         updatedRows[rowIndex].components.push(newComponent)
-    //         setRows(updatedRows)
-    //         return
-    //       }
-
-    //       const overRect = over.rect
-    //       const overCenter = overRect.top + overRect.height / 2
-    //       const pointerY = (event.activatorEvent as MouseEvent).clientY
-
-    //       // Determinar se estamos antes ou depois do componente
-    //       const position = pointerY < overCenter ? 'before' : 'after'
-    //       const insertIndex = position === 'before' ? componentIndex : componentIndex + 1
-
-    //       const updatedRows = [...rows]
-    //       updatedRows[rowIndex].components.splice(insertIndex, 0, newComponent)
-    //       setRows(updatedRows)
-
-    //       toast({
-    //         title: 'Componente adicionado',
-    //         description: `${newComponent.type} foi adicionado à linha ${rowIndex + 1}`,
-    //         duration: 2000,
-    //       })
-    //       return
-    //     }
-    //   }
-    // }
-    // // Handle reordering existing components
-    // else {
-    //   // Encontrar o componente em todas as linhas
-    //   let sourceRowIndex = -1
-    //   let sourceComponentIndex = -1
-
-    //   for (let i = 0; i < rows.length; i++) {
-    //     const componentIndex = rows[i].components.findIndex(
-    //       (c): c is FormComponent => c !== null && c.id === active.id,
-    //     )
-    //     if (componentIndex !== -1) {
-    //       sourceRowIndex = i
-    //       sourceComponentIndex = componentIndex
-    //       break
-    //     }
-    //   }
-
-    //   if (sourceRowIndex === -1) return // Componente não encontrado
-
-    //   const component = rows[sourceRowIndex].components[sourceComponentIndex]
-
-    //   // Verificar se estamos sobre uma linha
-    //   const targetRowIndex = rows.findIndex((row) => row.id === over.id)
-    //   if (targetRowIndex !== -1) {
-    //     console.log()
-    //     // Verificar se há espaço na linha de destino
-    //     if (component && canAddComponentToRow(rows[targetRowIndex], component.columnSpan)) {
-    //       // Remover da linha de origem
-    //       const updatedRows = [...rows]
-    //       updatedRows[sourceRowIndex].components.splice(sourceComponentIndex, 1)
-
-    //       // Adicionar à linha de destino
-    //       updatedRows[targetRowIndex].components.push(component)
-
-    //       setRows(updatedRows)
-
-    //       toast({
-    //         title: 'Componente movido',
-    //         description: component
-    //           ? `${component.type} foi movido para a linha ${targetRowIndex + 1}`
-    //           : 'Componente movido',
-    //         duration: 2000,
-    //       })
-    //     } else {
-    //       toast({
-    //         title: 'Não foi possível mover',
-    //         description: `Não há espaço suficiente na linha ${targetRowIndex + 1}`,
-    //         duration: 2000,
-    //         variant: 'destructive',
-    //       })
-    //     }
-    //     return
-    //   }
-
-    //   // Verificar se estamos sobre um componente
-    //   for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-    //     const row = rows[rowIndex]
-    //     const targetComponentIndex = row.components.findIndex(
-    //       (c): c is FormComponent => c !== null && c.id === over.id,
-    //     )
-
-    //     if (targetComponentIndex !== -1) {
-    //       // Se estamos na mesma linha, apenas reordenar
-    //       if (rowIndex === sourceRowIndex) {
-    //         const updatedRows = [...rows]
-    //         updatedRows[rowIndex].components = arrayMove(
-    //           updatedRows[rowIndex].components,
-    //           sourceComponentIndex,
-    //           targetComponentIndex,
-    //         )
-    //         setRows(updatedRows)
-
-    //         toast({
-    //           title: 'Componente reordenado',
-    //           description: 'A ordem dos componentes foi atualizada',
-    //           duration: 2000,
-    //         })
-    //       } else {
-    //         // Verificar se há espaço na linha de destino
-    //         if (!component || !canAddComponentToRow(row, component.columnSpan)) {
-    //           toast({
-    //             title: 'Não foi possível mover',
-    //             description: `Não há espaço suficiente na linha ${rowIndex + 1}`,
-    //             duration: 2000,
-    //             variant: 'destructive',
-    //           })
-    //           return
-    //         }
-
-    //         // Verificar se over.rect existe
-    //         if (!over.rect) {
-    //           // Se não existir, adicionar ao final da linha
-    //           const updatedRows = [...rows]
-    //           updatedRows[sourceRowIndex].components.splice(sourceComponentIndex, 1)
-    //           updatedRows[rowIndex].components.push(component)
-    //           setRows(updatedRows)
-    //           return
-    //         }
-
-    //         const overRect = over.rect
-    //         const overCenter = overRect.top + overRect.height / 2
-    //         const pointerY = (event.activatorEvent as MouseEvent).clientY
-
-    //         // Determinar se estamos antes ou depois do componente
-    //         const position = pointerY < overCenter ? 'before' : 'after'
-    //         const insertIndex =
-    //           position === 'before' ? targetComponentIndex : targetComponentIndex + 1
-
-    //         const updatedRows = [...rows]
-    //         // Remover da linha de origem
-    //         updatedRows[sourceRowIndex].components.splice(sourceComponentIndex, 1)
-    //         // Adicionar à linha de destino
-    //         updatedRows[rowIndex].components.splice(insertIndex, 0, component)
-
-    //         setRows(updatedRows)
-
-    //         toast({
-    //           title: 'Componente movido',
-    //           description: component
-    //             ? `${component.type} foi movido para a linha ${rowIndex + 1}`
-    //             : 'Componente movido',
-    //           duration: 2000,
-    //         })
-    //         return
-    //       }
-    //     }
-    //   }
-    // }
+        addFieldToRow(rowIndex, over.data.current.columnIndex, newComponent.type)
+      }
+    }
   }
 
   const handleUpdateComponent = (
@@ -427,6 +297,7 @@ export function FormBuilderPage() {
           version={1}
           isEditable={false}
           hasBackButton={true}
+          preview={true}
         />
       }
     >
@@ -462,7 +333,8 @@ export function FormBuilderPage() {
                 onRemoveComponent={removeField}
                 onUpdateComponent={handleUpdateComponent}
                 onRemoveRow={removeRow}
-                onUpdateRowColumns={updateRowColumns}
+                onRemoveRowColumns={removeRowColumns}
+                onAddRowColumns={addRowColumns}
                 dropIndicator={dropIndicator}
                 isDraggingOver={isDraggingOver}
                 dragOverRowId={dragOverRowId}

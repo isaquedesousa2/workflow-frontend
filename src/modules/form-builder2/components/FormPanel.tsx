@@ -17,13 +17,15 @@ import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 
 const componentTypes: { type: FormComponentType; icon: React.ReactNode; label: string }[] = [
-  { type: 'text', icon: <TextCursor className="h-4 w-4" />, label: 'Text Input' },
-  { type: 'textarea', icon: <AlignLeft className="h-4 w-4" />, label: 'Text Area' },
-  { type: 'select', icon: <ListFilter className="h-4 w-4" />, label: 'Select' },
+  { type: 'title', icon: <TextCursor className="h-4 w-4" />, label: 'Título' },
+  { type: 'subtitle', icon: <TextCursor className="h-4 w-4" />, label: 'Subtítulo' },
+  { type: 'text', icon: <TextCursor className="h-4 w-4" />, label: 'Texto' },
+  { type: 'textarea', icon: <AlignLeft className="h-4 w-4" />, label: 'Texto Longo' },
+  { type: 'select', icon: <ListFilter className="h-4 w-4" />, label: 'Selecionar' },
   { type: 'checkbox', icon: <CheckSquare className="h-4 w-4" />, label: 'Checkbox' },
-  { type: 'radio', icon: <Square className="h-4 w-4" />, label: 'Radio' },
-  { type: 'button', icon: <MousePointerClick className="h-4 w-4" />, label: 'Button' },
-  { type: 'heading', icon: <Type className="h-4 w-4" />, label: 'Heading' },
+  { type: 'checkbox-group', icon: <CheckSquare className="h-4 w-4" />, label: 'Checkbox Group' },
+  { type: 'button', icon: <MousePointerClick className="h-4 w-4" />, label: 'Botão' },
+  { type: 'heading', icon: <Type className="h-4 w-4" />, label: 'Cabeçalho' },
 ]
 
 interface DraggableComponentProps {

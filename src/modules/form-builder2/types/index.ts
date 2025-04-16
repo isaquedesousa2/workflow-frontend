@@ -3,21 +3,38 @@ export type FormComponentType =
   | 'textarea'
   | 'select'
   | 'checkbox'
-  | 'radio'
+  | 'checkbox-group'
   | 'button'
   | 'heading'
+  | 'title'
+  | 'subtitle'
   | 'none'
 export type ColumnSpan = 1 | 2 | 3 | 4
+
+export interface FormOption {
+  label: string
+  value: string
+}
 
 export interface FormComponent {
   id: string
   type: FormComponentType
-  label?: string
+  label: string
+  name: string
   placeholder?: string
   defaultValue?: string
   required?: boolean
-  options?: string[]
+  options?: FormOption[]
   columnSpan: ColumnSpan
+  description?: string
+  multiple?: boolean
+  validation?: {
+    required?: boolean
+    minLength?: number
+    maxLength?: number
+    pattern?: string
+    readonly?: boolean
+  }
 }
 
 export interface FormRow {

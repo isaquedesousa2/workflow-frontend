@@ -12,7 +12,9 @@ export function createComponent(type: FormComponentType): FormComponent {
   const baseComponent: FormComponent = {
     id,
     type,
-    columnSpan: 1, // Default to 1 column
+    columnSpan: 1,
+    label: '',
+    name: Math.random().toString(36).substring(2, 9),
   }
 
   switch (type) {
@@ -86,13 +88,11 @@ export function getColumnClass(span: ColumnSpan): string {
 }
 
 export function canAddComponentToRow(row: FormRow, componentSpan: ColumnSpan): boolean {
-  // Calcular o total de colunas já ocupadas na linha
   const usedColumns = row.components.reduce(
     (total, component) => total + (component?.columnSpan ?? 0),
     0,
   )
 
-  // Verificar se há espaço suficiente para o novo componente
   return usedColumns + componentSpan <= row.columns
 }
 
@@ -102,4 +102,17 @@ export function getAvailableColumnsInRow(row: FormRow): number {
     0,
   )
   return row.columns - usedColumns
+}
+
+export function getAvailableIndices(row: FormRow): number[] {
+  const availableColumns = getAvailableColumnsInRow(row)
+  const indices: number[] = []
+
+  for (let i = 0; i < row.components.length; i++) {
+    if (row.components[i] === null && indices.length < availableColumns) {
+      indices.push(i)
+    }
+  }
+
+  return indices
 }

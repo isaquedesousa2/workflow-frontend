@@ -1,10 +1,8 @@
 'use client'
-import { FormField } from '@/modules/form-builder/types/form-builder'
 import { toast } from '@/modules/form-builder2/hooks/use-toast'
-import { FormRow } from '@/modules/form-builder2/types'
-import { createRow } from '@/modules/form-builder2/utils'
+import { FormComponent, FormComponentType, FormRow } from '@/modules/form-builder2/types'
+import { createComponent, createRow } from '@/modules/form-builder2/utils'
 import { createContext, useContext, useState } from 'react'
-import { v4 as uuidv4 } from 'uuid'
 
 interface FormBuilderContextType {
   formName: string
@@ -13,8 +11,9 @@ interface FormBuilderContextType {
   setRows: (rows: FormRow[]) => void
   addRow: () => void
   removeRow: (rowIndex: number) => void
-  updateRowColumns: (rowIndex: number, columnCount: number) => void
-  addFieldToRow: (rowIndex: number, columnId: string, field: Omit<FormField, 'id'>) => void
+  removeRowColumns: (rowIndex: number) => void
+  addRowColumns: (rowIndex: number) => void
+  addFieldToRow: (rowIndex: number, columnIndex: number, fieldType: FormComponentType) => void
   removeField: (rowIndex: number, fieldId: string) => void
 }
 
@@ -57,70 +56,61 @@ export const FormBuilderProvider = ({ children }: { children: React.ReactNode })
     setRows(rows.filter((row) => row.id !== rows[rowIndex].id))
   }
 
-  const updateRowColumns = (rowIndex: number, columnCount: number) => {
+  const removeRowColumns = (rowIndex: number) => {
     const row = rows[rowIndex]
 
-    if (row.columns === columnCount) {
-      toast({
-        title: 'Não é possível atualizar',
-        description: 'A linha já tem o número de colunas desejado',
-        duration: 2000,
-      })
-      return
+    if (
+      row.columns > 1 &&
+      row.components.filter((component) => component === null).length > 0 &&
+      row.columns
+    ) {
+      const updatedRows = [...rows]
+      updatedRows[rowIndex].columns = row.columns - 1
+      setRows(updatedRows)
     }
-
-    if (columnCount < row.components.filter(Boolean).length) {
-      toast({
-        title: 'Não é possível atualizar',
-        description: 'O número de colunas não pode ser menor que o número de componentes',
-        duration: 2000,
-      })
-      return
-    }
-
-    setRows(
-      rows.map((row, index) => {
-        if (index === rowIndex) {
-          return { ...row, columns: columnCount }
-        }
-        return row
-      }),
-    )
-
-    toast({
-      title: 'Linha atualizada',
-      description: `A linha ${rowIndex + 1} agora tem ${columnCount} colunas`,
-      duration: 2000,
-    })
   }
 
-  const addFieldToRow = (rowIndex: number, columnId: string, field: Omit<FormField, 'id'>) => {
-    setRows(
-      rows.map((row) => {
-        if (row.id === rows[rowIndex].id) {
-          const columnIndex = row.components.findIndex((col) => col.id === columnId)
-          if (columnIndex !== -1) {
-            row.components[columnIndex].fields.push({ ...field, id: uuidv4() })
-          }
-        }
-        return row
-      }),
-    )
+  const addRowColumns = (rowIndex: number) => {
+    const row = rows[rowIndex]
+
+    if (row.columns < 4) {
+      const updatedRows = [...rows]
+      updatedRows[rowIndex].columns = row.columns + 1
+      setRows(updatedRows)
+    }
+  }
+
+  const addFieldToRow = (rowIndex: number, columnIndex: number, fieldType: FormComponentType) => {
+    const updatedRows = [...rows]
+    const newComponent = createComponent(fieldType)
+
+    if (rowIndex !== -1) {
+      if (columnIndex >= 0 && columnIndex < updatedRows[rowIndex].components.length) {
+        updatedRows[rowIndex].components[columnIndex] = newComponent
+      } else {
+        updatedRows[rowIndex].components.push(newComponent)
+      }
+      setRows(updatedRows)
+    }
   }
 
   const removeField = (rowIndex: number, fieldId: string) => {
     const updatedRows = [...rows]
-    updatedRows[rowIndex].components = updatedRows[rowIndex].components.filter(
-      (component) => component.id !== fieldId,
+    const componentIndex = updatedRows[rowIndex].components.findIndex(
+      (component) => component?.id === fieldId,
     )
-    setRows(updatedRows)
 
-    toast({
-      title: 'Componente removido',
-      description: `O componente foi removido da linha ${rowIndex + 1}`,
-      duration: 2000,
-      variant: 'destructive',
-    })
+    if (componentIndex !== -1) {
+      updatedRows[rowIndex].components[componentIndex] = null
+      setRows(updatedRows)
+
+      toast({
+        title: 'Componente removido',
+        description: `O componente foi removido da linha ${rowIndex + 1}`,
+        duration: 2000,
+        variant: 'destructive',
+      })
+    }
   }
 
   return (
@@ -132,7 +122,8 @@ export const FormBuilderProvider = ({ children }: { children: React.ReactNode })
         setRows,
         addRow,
         removeRow,
-        updateRowColumns,
+        removeRowColumns,
+        addRowColumns,
         addFieldToRow,
         removeField,
       }}

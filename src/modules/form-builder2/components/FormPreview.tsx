@@ -73,8 +73,8 @@ export function FormPreview({ rows }: FormPreviewProps) {
                     </SelectTrigger>
                     <SelectContent>
                       {(component.options || []).map((option, index) => (
-                        <SelectItem key={index} value={option} className="text-xs">
-                          {option}
+                        <SelectItem key={index} value={option.value} className="text-xs">
+                          {option.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -91,23 +91,6 @@ export function FormPreview({ rows }: FormPreviewProps) {
                       {component.placeholder || 'Checkbox'}
                     </label>
                   </div>
-                )}
-
-                {component.type === 'radio' && (
-                  <RadioGroup defaultValue={component.defaultValue}>
-                    {(component.options || ['Option 1', 'Option 2']).map((option, index) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <RadioGroupItem
-                          value={option}
-                          id={`${component.id}-${index}`}
-                          className="h-3 w-3"
-                        />
-                        <Label htmlFor={`${component.id}-${index}`} className="text-xs">
-                          {option}
-                        </Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
                 )}
 
                 {component.type === 'button' && (

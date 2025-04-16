@@ -13,7 +13,8 @@ interface FormCanvasProps {
     updates: Partial<FormComponent>,
   ) => void
   onRemoveRow: (rowIndex: number) => void
-  onUpdateRowColumns: (rowIndex: number, columns: number) => void
+  onRemoveRowColumns: (rowIndex: number) => void
+  onAddRowColumns: (rowIndex: number) => void
   dropIndicator: DropIndicator
   isDraggingOver: boolean
   dragOverRowId: string | null
@@ -24,7 +25,8 @@ export function FormCanvas({
   onRemoveComponent,
   onUpdateComponent,
   onRemoveRow,
-  onUpdateRowColumns,
+  onRemoveRowColumns,
+  onAddRowColumns,
   dropIndicator,
   isDraggingOver,
   dragOverRowId,
@@ -42,7 +44,8 @@ export function FormCanvas({
               onUpdateComponent(rowIndex, componentId, updates)
             }
             onRemoveRow={() => onRemoveRow(rowIndex)}
-            onUpdateColumns={(columns) => onUpdateRowColumns(rowIndex, columns)}
+            onRemoveRowColumns={() => onRemoveRowColumns(rowIndex)}
+            onAddRowColumns={() => onAddRowColumns(rowIndex)}
             dropIndicator={dropIndicator}
             isActive={dragOverRowId === row.id}
             rowCount={rows.length}
