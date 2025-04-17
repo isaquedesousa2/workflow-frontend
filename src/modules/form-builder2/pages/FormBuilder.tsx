@@ -298,6 +298,7 @@ export function FormBuilderPage() {
           isEditable={false}
           hasBackButton={true}
           preview={true}
+          hasRules={true}
         />
       }
     >
@@ -307,15 +308,15 @@ export function FormBuilderPage() {
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-[calc(100vh-120px)]">
-          <div className="md:col-span-3 p-4 overflow-y-auto">
-            {/* <h2 className="text-xl font-semibold mb-4">Componentes</h2> */}
-            <FormComponentPanel />
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+          <div className="md:col-span-3 relative">
+            <div className="p-4 shadow-md rounded-sm overflow-y-auto max-h-[calc(100vh-130px)] bg-white sticky top-[80px] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <FormComponentPanel />
+            </div>
           </div>
 
-          <div className="md:col-span-9 p-4 overflow-y-auto">
+          <div className="md:col-span-9 p-4">
             <div className="flex justify-between items-center mb-4">
-              {/* <h2 className="text-xl font-semibold">Canvas</h2> */}
               <Button
                 onClick={addRow}
                 className="gap-1 bg-purple-500 hover:bg-purple-600 text-white rounded-sm font-medium"

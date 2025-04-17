@@ -32,6 +32,9 @@ importers:
       '@mui/material':
         specifier: ^7.0.2
         version: 7.0.2(@emotion/react@11.14.0(@types/react@19.1.1)(react@19.1.0))(@emotion/styled@11.14.0(@emotion/react@11.14.0(@types/react@19.1.1)(react@19.1.0))(@types/react@19.1.1)(react@19.1.0))(@types/react@19.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-alert-dialog':
+        specifier: ^1.1.7
+        version: 1.1.7(@types/react-dom@19.1.2(@types/react@19.1.1))(@types/react@19.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@radix-ui/react-checkbox':
         specifier: ^1.1.5
         version: 1.1.5(@types/react-dom@19.1.2(@types/react@19.1.1))(@types/react@19.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -68,12 +71,18 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.2.0
         version: 1.2.0(@types/react-dom@19.1.2(@types/react@19.1.1))(@types/react@19.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@tanstack/react-router':
+        specifier: ^1.116.0
+        version: 1.116.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@types/react-resizable':
         specifier: ^3.0.8
         version: 3.0.8
       '@types/styled-components':
         specifier: ^5.1.34
         version: 5.1.34
+      '@xyflow/react':
+        specifier: ^12.5.6
+        version: 12.5.6(@types/react@19.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -159,6 +168,9 @@ importers:
       eslint-config-next:
         specifier: 15.3.0
         version: 15.3.0(eslint@9.24.0(jiti@2.4.2))(typescript@5.8.3)
+      tailwind-scrollbar-hide:
+        specifier: ^2.0.0
+        version: 2.0.0(tailwindcss@4.1.3)
       tailwindcss:
         specifier: ^4
         version: 4.1.3
@@ -688,6 +700,19 @@ packages:
   '@radix-ui/primitive@1.1.2':
     resolution: {integrity: sha512-XnbHrrprsNqZKQhStrSwgRUQzoCI1glLzdw79xiZPoofhGICeZRSQ3dIxAKH1gb3OHfNf4d6f+vAv3kil2eggA==}
 
+  '@radix-ui/react-alert-dialog@1.1.7':
+    resolution: {integrity: sha512-7Gx1gcoltd0VxKoR8mc+TAVbzvChJyZryZsTam0UhoL92z0L+W8ovxvcgvd+nkz24y7Qc51JQKBAGe4+825tYw==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+
   '@radix-ui/react-arrow@1.1.3':
     resolution: {integrity: sha512-2dvVU4jva0qkNZH6HHWuSz5FN5GeU5tymvCgutF8WaXz9WnD1NgUhy73cqzkjkN4Zkn8lfTPv5JIfrC221W+Nw==}
     peerDependencies:
@@ -1205,6 +1230,30 @@ packages:
   '@tailwindcss/postcss@4.1.3':
     resolution: {integrity: sha512-6s5nJODm98F++QT49qn8xJKHQRamhYHfMi3X7/ltxiSQ9dyRsaFSfFkfaMsanWzf+TMYQtbk8mt5f6cCVXJwfg==}
 
+  '@tanstack/history@1.115.0':
+    resolution: {integrity: sha512-K7JJNrRVvyjAVnbXOH2XLRhFXDkeP54Kt2P4FR1Kl2KDGlIbkua5VqZQD2rot3qaDrpufyUa63nuLai1kOLTsQ==}
+    engines: {node: '>=12'}
+
+  '@tanstack/react-router@1.116.0':
+    resolution: {integrity: sha512-ZBAg5Q6zJf0mnP9DYPiaaQ/wLDH2ujCMi/2RllpH86VUkdkyvQQzpAyKoiYJ891wh9OPgj6W6tPrzB4qy5FpRA==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      react: '>=18.0.0 || >=19.0.0'
+      react-dom: '>=18.0.0 || >=19.0.0'
+
+  '@tanstack/react-store@0.7.0':
+    resolution: {integrity: sha512-S/Rq17HaGOk+tQHV/yrePMnG1xbsKZIl/VsNWnNXt4XW+tTY8dTlvpJH2ZQ3GRALsusG5K6Q3unAGJ2pd9W/Ng==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  '@tanstack/router-core@1.115.3':
+    resolution: {integrity: sha512-gynHs72LHVg05fuJTwZZYhDL4VNEAK0sXz7IqiBv7a3qsYeEmIZsGaFr9sVjTkuF1kbrFBdJd5JYutzBh9Uuhw==}
+    engines: {node: '>=12'}
+
+  '@tanstack/store@0.7.0':
+    resolution: {integrity: sha512-CNIhdoUsmD2NolYuaIs8VfWM467RK6oIBAW4nPEKZhg1smZ+/CwtCdpURgp7nxSqOaV9oKkzdWD80+bC66F/Jg==}
+
   '@tybys/wasm-util@0.9.0':
     resolution: {integrity: sha512-6+7nlbMVX/PVDCwaIQ8nTOPveOcFLSt8GcXdx8hD0bt39uWxYT88uXzqTd4fTvqta7oeUJqudepapKNt2DYJFw==}
 
@@ -1479,6 +1528,15 @@ packages:
     resolution: {integrity: sha512-wAvXp4k7jhioi4SebXW/yfzzYwsUCr9kIX4gCsUFKpCTUf8Mi7vScJXI3S+kupSUf0LbVHudR8qBbe2wFMSNUw==}
     cpu: [x64]
     os: [win32]
+
+  '@xyflow/react@12.5.6':
+    resolution: {integrity: sha512-a6lL0WoeMSp7AC9AQzWMRMuqk12Dn+lVjMDLL93SZvpWv5D2BSq9woCv21JCUdWQ31MNpJVfLaV3TycaH1tsYw==}
+    peerDependencies:
+      react: '>=17'
+      react-dom: '>=17'
+
+  '@xyflow/system@0.0.56':
+    resolution: {integrity: sha512-Xc3LvEumjJD+CqPqlYkrlszJ4hWQ0DE+r5M4e5WpS/hKT4T6ktAjt7zeMNJ+vvTsXHulGnEoDRA8zbIfB6tPdQ==}
 
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -2825,6 +2883,11 @@ packages:
   tailwind-merge@3.2.0:
     resolution: {integrity: sha512-FQT/OVqCD+7edmmJpsgCsY820RTD5AkBryuG5IUqR5YQZSdj5xlH5nLgH7YPths7WsLPSpSBNneJdM8aS8aeFA==}
 
+  tailwind-scrollbar-hide@2.0.0:
+    resolution: {integrity: sha512-lqiIutHliEiODwBRHy4G2+Tcayo2U7+3+4frBmoMETD72qtah+XhOk5XcPzC1nJvXhXUdfl2ajlMhUc2qC6CIg==}
+    peerDependencies:
+      tailwindcss: '>=3.0.0 || >= 4.0.0 || >= 4.0.0-beta.8 || >= 4.0.0-alpha.20'
+
   tailwindcss-animate@1.0.7:
     resolution: {integrity: sha512-bl6mpH3T7I3UFxuvDEXLxy/VuFxBk5bbzplh7tXI68mwMokNYd1t9qPBHlnyTwfa4JGC4zP516I1hYYtQ/vspA==}
     peerDependencies:
@@ -2839,6 +2902,9 @@ packages:
 
   tiny-invariant@1.3.3:
     resolution: {integrity: sha512-+FbBPE1o9QAYvviau/qC5SE3caw21q3xkvWKBtja5vgqOWIHHJ3ioaq1VPfn/Szqctz2bU/oYeKd9/z5BL+PVg==}
+
+  tiny-warning@1.0.3:
+    resolution: {integrity: sha512-lBN9zLN/oAf68o3zNXYrdCt1kP8WsiGW8Oo2ka41b2IM5JL/S1CTyX1rW0mb/zSuJun0ZUrDxx4sqvYS2FWzPA==}
 
   tinyglobby@0.2.12:
     resolution: {integrity: sha512-qkf4trmKSIiMTs/E63cxH+ojC2unam7rJ0WrauAzpT3ECNTxGRMlaXxVbfxMUC/w0LaYk6jQ4y/nGR9uBO3tww==}
@@ -3509,6 +3575,20 @@ snapshots:
 
   '@radix-ui/primitive@1.1.2': {}
 
+  '@radix-ui/react-alert-dialog@1.1.7(@types/react-dom@19.1.2(@types/react@19.1.1))(@types/react@19.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@radix-ui/primitive': 1.1.2
+      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.1.1)(react@19.1.0)
+      '@radix-ui/react-context': 1.1.2(@types/react@19.1.1)(react@19.1.0)
+      '@radix-ui/react-dialog': 1.1.7(@types/react-dom@19.1.2(@types/react@19.1.1))(@types/react@19.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-primitive': 2.0.3(@types/react-dom@19.1.2(@types/react@19.1.1))(@types/react@19.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@radix-ui/react-slot': 1.2.0(@types/react@19.1.1)(react@19.1.0)
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+    optionalDependencies:
+      '@types/react': 19.1.1
+      '@types/react-dom': 19.1.2(@types/react@19.1.1)
+
   '@radix-ui/react-arrow@1.1.3(@types/react-dom@19.1.2(@types/react@19.1.1))(@types/react@19.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@radix-ui/react-primitive': 2.0.3(@types/react-dom@19.1.2(@types/react@19.1.1))(@types/react@19.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -4062,6 +4142,34 @@ snapshots:
       postcss: 8.5.3
       tailwindcss: 4.1.3
 
+  '@tanstack/history@1.115.0': {}
+
+  '@tanstack/react-router@1.116.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@tanstack/history': 1.115.0
+      '@tanstack/react-store': 0.7.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@tanstack/router-core': 1.115.3
+      jsesc: 3.1.0
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+      tiny-invariant: 1.3.3
+      tiny-warning: 1.0.3
+
+  '@tanstack/react-store@0.7.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@tanstack/store': 0.7.0
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+      use-sync-external-store: 1.5.0(react@19.1.0)
+
+  '@tanstack/router-core@1.115.3':
+    dependencies:
+      '@tanstack/history': 1.115.0
+      '@tanstack/store': 0.7.0
+      tiny-invariant: 1.3.3
+
+  '@tanstack/store@0.7.0': {}
+
   '@tybys/wasm-util@0.9.0':
     dependencies:
       tslib: 2.8.1
@@ -4366,6 +4474,27 @@ snapshots:
 
   '@unrs/resolver-binding-win32-x64-msvc@1.5.0':
     optional: true
+
+  '@xyflow/react@12.5.6(@types/react@19.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@xyflow/system': 0.0.56
+      classcat: 5.0.5
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+      zustand: 4.5.6(@types/react@19.1.1)(react@19.1.0)
+    transitivePeerDependencies:
+      - '@types/react'
+      - immer
+
+  '@xyflow/system@0.0.56':
+    dependencies:
+      '@types/d3-drag': 3.0.7
+      '@types/d3-selection': 3.0.11
+      '@types/d3-transition': 3.0.9
+      '@types/d3-zoom': 3.0.8
+      d3-drag: 3.0.0
+      d3-selection: 3.0.0
+      d3-zoom: 3.0.0
 
   acorn-jsx@5.3.2(acorn@8.14.1):
     dependencies:
@@ -5954,6 +6083,10 @@ snapshots:
 
   tailwind-merge@3.2.0: {}
 
+  tailwind-scrollbar-hide@2.0.0(tailwindcss@4.1.3):
+    dependencies:
+      tailwindcss: 4.1.3
+
   tailwindcss-animate@1.0.7(tailwindcss@4.1.3):
     dependencies:
       tailwindcss: 4.1.3
@@ -5963,6 +6096,8 @@ snapshots:
   tapable@2.2.1: {}
 
   tiny-invariant@1.3.3: {}
+
+  tiny-warning@1.0.3: {}
 
   tinyglobby@0.2.12:
     dependencies:

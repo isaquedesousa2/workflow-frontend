@@ -1,57 +1,78 @@
-import { FC, memo } from 'react';
-import { Handle, Position, NodeProps } from 'reactflow';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { FC } from 'react'
+import { Handle, Position, NodeProps } from 'reactflow'
+import { BaseNode } from './base/BaseNode'
 
 export interface DecisionNodeData {
-    label: string;
-    condition: string;
-    trueLabel: string;
-    falseLabel: string;
+  label: string
+  type: string
+  icon: string
+  description: string
+  conditions?: {
+    id: string
+    label: string
+    value: string
+  }[]
+  onDelete?: (nodeId: string) => void
+  onSettings?: (nodeId: string) => void
 }
 
-export const nodeConfig = {
-    type: 'Decision',
-    label: 'Decisão',
-    icon: '🔄',
-    description: 'Cria uma bifurcação condicional no fluxo',
-    defaultData: {
-        label: 'Nova Decisão',
-        condition: '',
-        trueLabel: 'Sim',
-        falseLabel: 'Não',
-    },
-};
+export const DecisionNode: FC<NodeProps<DecisionNodeData>> = (props) => {
+  const condition = props.data.conditions?.[0]?.label || ''
 
-export const DecisionNode: FC<NodeProps<DecisionNodeData>> = ({ data, selected }) => {
-    return (
-        <Card className={`w-[300px] ring-1 ring-yellow-300 ${selected ? 'ring-2 ring-yellow-500' : ''}`}>
-            <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2">
-                    <span className="text-2xl">{nodeConfig.icon}</span>
-                    {data.label}
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="condition">Condição</Label>
-                    <Input id="condition" value={data.condition} placeholder="Digite a condição para a decisão" />
+  return (
+    <>
+      <BaseNode
+        {...props}
+        data={{
+          ...props.data,
+          validation: {
+            validateHandlerTarget: true,
+            validateHandlerSource: true,
+            validateHandlerTargetCount: 1,
+            validateHandlerSourceCount: 2,
+          },
+          customContent: (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-gray-700">Condição</div>
+                <div className="bg-gray-50 border border-gray-200 rounded-md p-2 text-sm text-gray-500">
+                  {condition || 'Descreva a condição'}
                 </div>
-                <div className="space-y-2">
-                    <Label htmlFor="trueLabel">Rótulo para Verdadeiro</Label>
-                    <Input id="trueLabel" value={data.trueLabel} placeholder="Ex: Sim, Aprovado, etc" />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="falseLabel">Rótulo para Falso</Label>
-                    <Input id="falseLabel" value={data.falseLabel} placeholder="Ex: Não, Reprovado, etc" />
-                </div>
-            </CardContent>
-            <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-yellow-500" />
-            <Handle type="source" position={Position.Bottom} id="true" className="w-3 h-3 !bg-green-500" />
-            <Handle type="source" position={Position.Bottom} id="false" className="w-3 h-3 !bg-red-500" />
-        </Card>
-    );
-};
+              </div>
 
-export default memo(DecisionNode);
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-3 p-2 bg-green-50 rounded-lg">
+                  <div className="w-2 h-2 rounded-full bg-green-500" />
+                  <p className="text-sm text-gray-700">Sim</p>
+                </div>
+
+                <div className="flex items-center gap-3 p-2 bg-red-50 rounded-lg">
+                  <div className="w-2 h-2 rounded-full bg-red-500" />
+                  <p className="text-sm text-gray-700">Não</p>
+                </div>
+              </div>
+            </div>
+          ),
+          customSourceHandlers: [
+            {
+              id: 'yes',
+              type: 'source',
+              position: Position.Right,
+              style: {
+                top: '68%',
+              },
+            },
+            {
+              id: 'no',
+              type: 'source',
+              position: Position.Right,
+              style: {
+                top: '87%',
+              },
+            },
+          ],
+        }}
+      />
+    </>
+  )
+}

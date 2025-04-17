@@ -22,16 +22,24 @@ import { NodeToolbar } from './NodeToolbar'
 import WorkflowConnection from './edges/WorkflowConnection'
 import { NodeSelectionModal } from './NodeSelectionModal'
 import { NodeTypes } from '../types'
-import ActivityNode from './nodes/ActivityNode'
+import { ActivityNode } from './nodes/ActivityNode'
 import { WebhookNode } from './nodes/WebhookNode'
 import { ConditionNode } from './nodes/ConditionNode'
 import { NodeDrawer } from './NodeDrawer'
+import { StartNode } from './nodes/StartNode'
+import { EndNode } from './nodes/EndNode'
+import { DecisionNode } from './nodes/DecisionNode'
+import { JoinNode } from './nodes/JoinNode'
 
 const nodeTypes = {
   customNode: CustomNode,
+  startNode: StartNode,
+  endNode: EndNode,
   activityNode: ActivityNode,
   webhookNode: WebhookNode,
   conditionNode: ConditionNode,
+  decisionNode: DecisionNode,
+  joinNode: JoinNode,
 }
 
 const edgeTypes = {
@@ -62,8 +70,8 @@ const createInitialNodes = (
   const initialNodes: Node[] = [
     {
       id: '1',
-      type: 'customNode',
-      position: { x: 50, y: 250 },
+      type: 'startNode',
+      position: { x: 0, y: 250 },
       data: {
         label: 'Início do Fluxo',
         type: 'Início',
@@ -79,8 +87,8 @@ const createInitialNodes = (
     },
     {
       id: '2',
-      type: 'customNode',
-      position: { x: 450, y: 250 },
+      type: 'endNode',
+      position: { x: 2000, y: 250 },
       data: {
         label: 'Finalizar Fluxo',
         type: 'Fim',
@@ -160,7 +168,7 @@ export const WorkflowCanvas: FC<WorkflowCanvasProps> = memo(() => {
 
       const newNode: Node = {
         id: `${nodeData.type}-${Date.now()}`,
-        type: nodeData.type === 'Condição' ? 'conditionNode' : 'customNode',
+        type: nodeData.type,
         position,
         data: {
           label: nodeData.label,
@@ -184,21 +192,9 @@ export const WorkflowCanvas: FC<WorkflowCanvasProps> = memo(() => {
 
   const onConnect = useCallback(
     (params: Connection | Edge) => {
-      // Verifica se o nó de destino já tem uma conexão
-      const targetNodeHasConnection = edges.some((edge) => edge.target === params.target)
-
-      if (targetNodeHasConnection) {
-        // Se o nó já tem uma conexão, não permite criar uma nova
-        return
-      }
-
-      const edge = {
-        ...params,
-        type: 'custom',
-      }
-      setEdges((eds: Edge[]) => addEdge(edge, eds))
+      setEdges((eds: Edge[]) => addEdge(params, eds))
     },
-    [setEdges, edges],
+    [setEdges, nodes, edges],
   )
 
   const onNodeClick: NodeMouseHandler = useCallback(
@@ -250,21 +246,21 @@ export const WorkflowCanvas: FC<WorkflowCanvasProps> = memo(() => {
           className="bg-[#fafafa]"
           minZoom={0.5}
           maxZoom={1.5}
-          defaultViewport={{ x: 0, y: 0, zoom: 1 }}
-          connectionMode={ConnectionMode.Loose}
+          defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
+          connectionMode={ConnectionMode.Strict}
           connectionLineStyle={{ stroke: '#8b5cf6', strokeWidth: 3 }}
         ></ReactFlow>
       </div>
       <NodeToolbar />
-      <NodeSelectionModal
+      {/* <NodeSelectionModal
         isOpen={isNodeSelectionOpen}
         onClose={() => {
           setIsNodeSelectionOpen(false)
           setNodeSelectionData(null)
         }}
         onSelect={handleNodeSelect}
-      />
-      <NodeDrawer />
+      /> */}
+      {/* <NodeDrawer /> */}
     </div>
   )
 })

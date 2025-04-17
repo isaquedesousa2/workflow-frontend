@@ -6,7 +6,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import ActivityNode from './nodes/ActivityNode'
 import { WebhookNode } from './nodes/WebhookNode'
 import { ConditionNode } from './nodes/ConditionNode'
-import DecisionNode from '@/modules/workflow-builder/components/nodes/DecisionNode'
+import { DecisionNode } from '@/modules/workflow-builder/components/nodes/DecisionNode'
+import { JoinNode } from './nodes/JoinNode'
 
 interface NodeOption {
   type: string
@@ -25,28 +26,28 @@ interface NodeOption {
 
 const nodeOptions: NodeOption[] = [
   {
-    type: 'Atividade',
+    type: 'activityNode',
     label: 'Atividade',
     icon: '📝',
     description: 'Tarefa ou atividade a ser executada',
     component: ActivityNode,
   },
   {
-    type: 'Decisão',
+    type: 'decisionNode',
     label: 'Decisão',
     icon: '🔍',
     description: 'Decisão entre duas opções',
     component: DecisionNode,
   },
   {
-    type: 'Webhook',
+    type: 'webhookNode',
     label: 'Disparar Webhook',
     icon: '🌐',
     description: 'Dispara uma requisição HTTP para um endpoint',
     component: WebhookNode,
   },
   {
-    type: 'Condição',
+    type: 'conditionNode',
     label: 'Condição',
     icon: '❓',
     description: 'Bifurcação condicional do fluxo',
@@ -55,9 +56,16 @@ const nodeOptions: NodeOption[] = [
       conditions: [
         { id: 'cond1', label: 'Condição 1', value: 'cond1' },
         { id: 'cond2', label: 'Condição 2', value: 'cond2' },
-        { id: 'cond2', label: 'Condição 2', value: 'cond2' },
+        { id: 'cond3', label: 'Condição 3', value: 'cond3' },
       ],
     },
+  },
+  {
+    type: 'joinNode',
+    label: 'Junção',
+    icon: '🔗',
+    description: 'Ponto de junção para sincronizar múltiplos fluxos',
+    component: JoinNode,
   },
 ]
 

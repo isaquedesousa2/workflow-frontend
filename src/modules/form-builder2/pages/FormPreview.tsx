@@ -13,6 +13,11 @@ import { TitleInput } from '@/modules/form-builder2/components/inputs/TitleInput
 import { SubtitleInput } from '@/modules/form-builder2/components/inputs/SubtitleInput'
 import { CheckboxGroupInput } from '@/modules/form-builder2/components/inputs/CheckboxGroupInput'
 import { SelectInput } from '@/modules/form-builder2/components/inputs/SelectInput'
+import { EmailInput } from '@/modules/form-builder2/components/inputs/EmailInput'
+import { PhoneInput } from '@/modules/form-builder2/components/inputs/PhoneInput'
+import { NumberInput } from '@/modules/form-builder2/components/inputs/NumberInput'
+import { DatePickerInput } from '@/modules/form-builder2/components/inputs/DatePickerInput'
+
 export function FormPreview() {
   const { rows } = useFormBuilder()
   const methods = useForm()
@@ -33,6 +38,14 @@ export function FormPreview() {
         return <CheckboxGroupInput field={field} />
       case 'select':
         return <SelectInput field={field} />
+      case 'email':
+        return <EmailInput field={field} />
+      case 'phone':
+        return <PhoneInput field={field} />
+      case 'number':
+        return <NumberInput field={field} />
+      case 'date':
+        return <DatePickerInput field={field} />
       default:
         return <TextInput field={field} />
     }

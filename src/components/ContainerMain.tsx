@@ -1,12 +1,16 @@
+import { cn } from '@/lib/utils'
+
 interface ContainerMainProps {
   header: React.ReactNode
   children: React.ReactNode
+  className?: string
 }
-export const ContainerMain = ({ children, header }: ContainerMainProps) => {
+
+export const ContainerMain = ({ children, header, className }: ContainerMainProps) => {
   return (
-    <div className="flex flex-col h-full bg-gray-100">
+    <div className="flex flex-col flex-1 bg-gray-100">
       {header}
-      <div className="flex-1 p-8">{children}</div>
+      <div className={cn('p-8', className)}>{children}</div>
     </div>
   )
 }

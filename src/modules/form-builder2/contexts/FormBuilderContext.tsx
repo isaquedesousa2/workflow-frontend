@@ -21,7 +21,7 @@ export const FormBuilderContext = createContext<FormBuilderContextType | undefin
 
 export const FormBuilderProvider = ({ children }: { children: React.ReactNode }) => {
   const [formName, setFormName] = useState('')
-  const [rows, setRows] = useState<FormRow[]>([])
+  const [rows, setRows] = useState<FormRow[]>([createRow(1)])
 
   const addRow = () => {
     setRows([...rows, createRow(1)])

@@ -1,7 +1,7 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Save, ArrowLeft, Eye } from 'lucide-react'
+import { Save, ArrowLeft, Eye, Settings } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 interface FormBuilderHeaderProps {
   onSave?: () => void
@@ -11,6 +11,7 @@ interface FormBuilderHeaderProps {
   isEditable: boolean
   hasBackButton?: boolean
   preview?: boolean
+  hasRules?: boolean
 }
 
 export const FormBuilderHeader = ({
@@ -21,6 +22,7 @@ export const FormBuilderHeader = ({
   isEditable,
   hasBackButton = false,
   preview = false,
+  hasRules = false,
 }: FormBuilderHeaderProps) => {
   const router = useRouter()
   const handleSave = () => {
@@ -37,8 +39,12 @@ export const FormBuilderHeader = ({
     router.push(`/form-builder/preview`)
   }
 
+  const handleRules = () => {
+    router.push(`/form-builder/rules`)
+  }
+
   return (
-    <div className="bg-[#253342] w-full h-[60px] flex items-center justify-between px-8">
+    <div className="bg-[#253342] w-full min-h-[60px] flex items-center justify-between px-8 sticky top-0 z-10">
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-white">Versão</span>
         <div className="bg-purple-500/20 px-3 py-1 rounded text-white font-semibold text-sm flex items-center">
@@ -65,6 +71,15 @@ export const FormBuilderHeader = ({
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
             Voltar
+          </Button>
+        )}
+        {hasRules && (
+          <Button
+            onClick={handleRules}
+            className="bg-purple-500 hover:bg-purple-600 text-white border-none rounded font-medium px-6"
+          >
+            <Settings className="w-5 h-5 mr-2" />
+            Regras
           </Button>
         )}
         {preview && (

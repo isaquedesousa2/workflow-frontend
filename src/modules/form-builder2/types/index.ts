@@ -8,6 +8,10 @@ export type FormComponentType =
   | 'heading'
   | 'title'
   | 'subtitle'
+  | 'email'
+  | 'phone'
+  | 'number'
+  | 'date'
   | 'none'
 export type ColumnSpan = 1 | 2 | 3 | 4
 
@@ -34,6 +38,9 @@ export interface FormComponent {
     maxLength?: number
     pattern?: string
     readonly?: boolean
+    min?: number
+    max?: number
+    step?: number
   }
 }
 

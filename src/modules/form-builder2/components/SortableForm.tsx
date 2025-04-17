@@ -6,11 +6,19 @@ import type { FormComponent } from '../types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { GripVertical, Trash2, Settings } from 'lucide-react'
+import { GripVertical, Trash2, Settings, X } from 'lucide-react'
 import { useState } from 'react'
 import { ComponentSettings } from './FormSettings'
 import { getColumnClass } from '../utils'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+  DrawerClose,
+} from '@/components/ui/drawer'
 
 interface SortableFormComponentProps {
   rowId: string
@@ -34,8 +42,6 @@ export function SortableFormComponent({
   onUpdate,
   dropIndicator,
 }: SortableFormComponentProps) {
-  const [showSettings, setShowSettings] = useState(false)
-
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: component.id,
     data: {
@@ -83,15 +89,31 @@ export function SortableFormComponent({
         <div className="flex items-center justify-between mb-2">
           <Label className="text-sm font-medium">{component.label || component.type}</Label>
           <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowSettings(!showSettings)}
-              className={`h-8 w-8 ${showSettings ? 'bg-muted' : ''}`}
-            >
-              <Settings className="h-4 w-4" />
-              <span className="sr-only">Settings</span>
-            </Button>
+            <Drawer direction="right">
+              <DrawerTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Settings className="h-4 w-4" />
+                  <span className="sr-only">Settings</span>
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent className="h-[calc(100vh-16px)] w-[400px] m-2 mr-0 rounded-sm rounded-r-none">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <DrawerTitle>Configurações do Componente</DrawerTitle>
+                  <DrawerClose asChild>
+                    <Button variant="ghost" size="icon">
+                      <X className="h-4 w-4" />
+                      <span className="sr-only">Fechar</span>
+                    </Button>
+                  </DrawerClose>
+                </div>
+                <div className="p-4 overflow-y-auto h-[calc(100%-73px)]">
+                  <ComponentSettings
+                    component={component}
+                    onUpdate={(updates) => onUpdate(component.id, updates)}
+                  />
+                </div>
+              </DrawerContent>
+            </Drawer>
             <Button
               variant="ghost"
               size="icon"
@@ -103,22 +125,6 @@ export function SortableFormComponent({
             </Button>
           </div>
         </div>
-
-        {showSettings && (
-          <AnimatePresence>
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ComponentSettings
-                component={component}
-                onUpdate={(updates) => onUpdate(component.id, updates)}
-              />
-            </motion.div>
-          </AnimatePresence>
-        )}
       </CardContent>
     </Card>
   )

@@ -35,19 +35,17 @@ export function createComponent(type: FormComponentType): FormComponent {
         ...baseComponent,
         label: 'Select',
         placeholder: 'Select an option',
-        options: ['Option 1', 'Option 2', 'Option 3'],
+        options: [
+          { value: 'option1', label: 'Option 1' },
+          { value: 'option2', label: 'Option 2' },
+          { value: 'option3', label: 'Option 3' },
+        ],
       }
     case 'checkbox':
       return {
         ...baseComponent,
         label: 'Checkbox',
         placeholder: 'Check this option',
-      }
-    case 'radio':
-      return {
-        ...baseComponent,
-        label: 'Radio Group',
-        options: ['Option 1', 'Option 2', 'Option 3'],
       }
     case 'button':
       return {
