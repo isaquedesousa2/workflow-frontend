@@ -1,12 +1,24 @@
 import { FC } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
 import { BaseNode } from './base/BaseNode'
+import { useNodeSettings } from '@/modules/workflow-builder/contexts/NodeSettingsContext'
+import { DecisionNodeConfig } from '@/modules/workflow-builder/types/node-settings'
+
+const operatorLabels: Record<string, string> = {
+  '>': 'maior que',
+  '<': 'menor que',
+  '>=': 'maior ou igual a',
+  '<=': 'menor ou igual a',
+  '==': 'igual a',
+  '!=': 'diferente de',
+  contains: 'contém',
+  startsWith: 'começa com',
+  endsWith: 'termina com',
+}
 
 export interface DecisionNodeData {
-  label: string
   type: string
   icon: string
-  description: string
   conditions?: {
     id: string
     label: string
@@ -17,7 +29,22 @@ export interface DecisionNodeData {
 }
 
 export const DecisionNode: FC<NodeProps<DecisionNodeData>> = (props) => {
-  const condition = props.data.conditions?.[0]?.label || ''
+  const { getNodeSettings } = useNodeSettings()
+  const nodeSettings = getNodeSettings<DecisionNodeConfig>(props.id)
+
+  const getConditionText = () => {
+    if (!nodeSettings?.settings) return 'Descreva a condição'
+
+    const { formField, operator, comparisonType, comparisonValue, comparisonField } =
+      nodeSettings.settings
+
+    if (!formField?.label || !operator) return 'Descreva a condição'
+
+    const operatorText = operatorLabels[operator] || operator
+    const comparisonText = comparisonType === 'value' ? comparisonValue : comparisonField?.label
+
+    return `${formField.label} ${operatorText} ${comparisonText || '...'}`
+  }
 
   return (
     <>
@@ -25,6 +52,8 @@ export const DecisionNode: FC<NodeProps<DecisionNodeData>> = (props) => {
         {...props}
         data={{
           ...props.data,
+          label: nodeSettings?.settings?.label || '',
+          description: nodeSettings?.settings?.description || '',
           validation: {
             validateHandlerTarget: true,
             validateHandlerSource: true,
@@ -36,7 +65,7 @@ export const DecisionNode: FC<NodeProps<DecisionNodeData>> = (props) => {
               <div className="space-y-2">
                 <div className="text-sm font-medium text-gray-700">Condição</div>
                 <div className="bg-gray-50 border border-gray-200 rounded-md p-2 text-sm text-gray-500">
-                  {condition || 'Descreva a condição'}
+                  {getConditionText()}
                 </div>
               </div>
 

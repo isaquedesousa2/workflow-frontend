@@ -1,43 +1,29 @@
 'use client'
 
-import { FC, useCallback, memo, useEffect, useRef, useState } from 'react'
-import ReactFlow, {
-  addEdge,
-  Connection,
-  Edge,
-  DefaultEdgeOptions,
-  Node,
-  NodeChange,
-  EdgeChange,
-  applyNodeChanges,
-  applyEdgeChanges,
-  NodeMouseHandler,
-  ReactFlowInstance,
-  ConnectionMode,
-} from 'reactflow'
+import { FC, memo, useEffect, useState } from 'react'
+import ReactFlow, { Edge, DefaultEdgeOptions, Node, ConnectionMode } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { useWorkflowBuilder } from '../contexts/WorkflowBuilderContext'
 import { CustomNode } from './nodes/base/CustomNode'
 import { NodeToolbar } from './NodeToolbar'
 import WorkflowConnection from './edges/WorkflowConnection'
-import { NodeSelectionModal } from './NodeSelectionModal'
-import { NodeTypes } from '../types'
-import { ActivityNode } from './nodes/ActivityNode'
-import { WebhookNode } from './nodes/WebhookNode'
-import { ConditionNode } from './nodes/ConditionNode'
-import { NodeDrawer } from './NodeDrawer'
-import { StartNode } from './nodes/StartNode'
-import { EndNode } from './nodes/EndNode'
+import { ActivityNode } from './nodes/actions/ActivityNode'
+import { WebhookNode } from './nodes/actions/WebhookNode'
+import { ManualTriggerNode } from './nodes/triggers/ManualTriggerNode'
+import { CronTriggerNode } from './nodes/triggers/CronTriggerNode'
 import { DecisionNode } from './nodes/DecisionNode'
 import { JoinNode } from './nodes/JoinNode'
+import { WorkflowTriggerNode } from '@/modules/workflow-builder/components/nodes/triggers/WorkflowTriggerNode'
+import { NodeSettingsModal } from './nodes/NodeSettingsModal'
+import { Background, Controls, Panel } from 'reactflow'
 
 const nodeTypes = {
   customNode: CustomNode,
-  startNode: StartNode,
-  endNode: EndNode,
+  manualTriggerNode: ManualTriggerNode,
+  cronTriggerNode: CronTriggerNode,
+  workflowTriggerNode: WorkflowTriggerNode,
   activityNode: ActivityNode,
   webhookNode: WebhookNode,
-  conditionNode: ConditionNode,
   decisionNode: DecisionNode,
   joinNode: JoinNode,
 }
@@ -63,179 +49,50 @@ interface WorkflowCanvasProps {
   onSave?: (workflow: WorkflowData) => void
 }
 
-const createInitialNodes = (
-  setNodes: React.Dispatch<React.SetStateAction<Node[]>>,
-  setEdges: React.Dispatch<React.SetStateAction<Edge[]>>,
-): Node[] => {
-  const initialNodes: Node[] = [
-    {
-      id: '1',
-      type: 'startNode',
-      position: { x: 0, y: 250 },
-      data: {
-        label: 'Início do Fluxo',
-        type: 'Início',
-        icon: '🎯',
-        description: 'Ponto inicial do fluxo de trabalho',
-        onDelete: (nodeId: string) => {
-          setNodes((nds: Node[]) => nds.filter((node: Node) => node.id !== nodeId))
-          setEdges((eds: Edge[]) =>
-            eds.filter((edge: Edge) => edge.source !== nodeId && edge.target !== nodeId),
-          )
-        },
-      },
-    },
-    {
-      id: '2',
-      type: 'endNode',
-      position: { x: 2000, y: 250 },
-      data: {
-        label: 'Finalizar Fluxo',
-        type: 'Fim',
-        icon: '🔚',
-        description: 'Ponto final do fluxo de trabalho',
-        onDelete: (nodeId: string) => {
-          setNodes((nds: Node[]) => nds.filter((node: Node) => node.id !== nodeId))
-          setEdges((eds: Edge[]) =>
-            eds.filter((edge: Edge) => edge.source !== nodeId && edge.target !== nodeId),
-          )
-        },
-      },
-    },
-  ]
-  return initialNodes
-}
-
 export const WorkflowCanvas: FC<WorkflowCanvasProps> = memo(() => {
-  const { nodes, edges, setNodes, setEdges, setSelectedNode, addNodeBetween } = useWorkflowBuilder()
-  const reactFlowWrapper = useRef<HTMLDivElement>(null)
-  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)
-  const [isNodeSelectionOpen, setIsNodeSelectionOpen] = useState(false)
-  const [nodeSelectionData, setNodeSelectionData] = useState<{
-    sourceId: string
-    targetId: string
-  } | null>(null)
+  const {
+    nodes,
+    edges,
+    onConnect,
+    onNodesChange,
+    onEdgesChange,
+    setReactFlowInstance,
+    reactFlowWrapper,
+    onDrop,
+    onDragOver,
+  } = useWorkflowBuilder()
 
-  useEffect(() => {
-    if (nodes.length === 0) {
-      setNodes(createInitialNodes(setNodes, setEdges))
-    }
-  }, [nodes.length, setNodes, setEdges])
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null)
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
 
-  useEffect(() => {
-    const handleDeleteEdge = (event: CustomEvent) => {
-      const { edgeId } = event.detail
-      setEdges((eds) => eds.filter((edge) => edge.id !== edgeId))
-    }
-
-    window.addEventListener('deleteEdge', handleDeleteEdge as EventListener)
-    return () => {
-      window.removeEventListener('deleteEdge', handleDeleteEdge as EventListener)
-    }
-  }, [setEdges])
-
-  useEffect(() => {
-    const handleAddNodeBetween = (event: CustomEvent) => {
-      const { sourceId, targetId } = event.detail
-      setNodeSelectionData({ sourceId, targetId })
-      setIsNodeSelectionOpen(true)
-    }
-
-    window.addEventListener('addNodeBetween', handleAddNodeBetween as EventListener)
-    return () => {
-      window.removeEventListener('addNodeBetween', handleAddNodeBetween as EventListener)
-    }
-  }, [])
-
-  const onDragOver = useCallback((event: React.DragEvent) => {
-    event.preventDefault()
-    event.dataTransfer.dropEffect = 'move'
-  }, [])
-
-  const onDrop = useCallback(
-    (event: React.DragEvent) => {
-      event.preventDefault()
-
-      if (!reactFlowWrapper.current || !reactFlowInstance) return
-
-      const bounds = reactFlowWrapper.current.getBoundingClientRect()
-      const nodeData = JSON.parse(event.dataTransfer.getData('application/reactflow'))
-
-      const position = reactFlowInstance.project({
-        x: event.clientX - bounds.left,
-        y: event.clientY - bounds.top,
-      })
-
-      const newNode: Node = {
-        id: `${nodeData.type}-${Date.now()}`,
-        type: nodeData.type,
-        position,
-        data: {
-          label: nodeData.label,
-          type: nodeData.type,
-          icon: nodeData.icon,
-          description: nodeData.description,
-          ...nodeData.initialData,
-          onDelete: (nodeId: string) => {
-            setNodes((nds: Node[]) => nds.filter((node: Node) => node.id !== nodeId))
-            setEdges((eds: Edge[]) =>
-              eds.filter((edge: Edge) => edge.source !== nodeId && edge.target !== nodeId),
-            )
-          },
-        },
-      }
-
-      setNodes((nds: Node[]) => nds.concat(newNode))
-    },
-    [reactFlowInstance, setNodes, setEdges],
-  )
-
-  const onConnect = useCallback(
-    (params: Connection | Edge) => {
-      setEdges((eds: Edge[]) => addEdge(params, eds))
-    },
-    [setEdges, nodes, edges],
-  )
-
-  const onNodeClick: NodeMouseHandler = useCallback(
-    (_, node) => {
+  const handleNodeSettings = (nodeId: string) => {
+    const node = nodes.find((n) => n.id === nodeId)
+    if (node) {
       setSelectedNode(node)
-    },
-    [setSelectedNode],
-  )
-
-  const onNodesChange = useCallback(
-    (changes: NodeChange[]) => {
-      setNodes((nds: Node[]) => applyNodeChanges(changes, nds))
-    },
-    [setNodes],
-  )
-
-  const onEdgesChange = useCallback(
-    (changes: EdgeChange[]) => {
-      setEdges((eds: Edge[]) => applyEdgeChanges(changes, eds))
-    },
-    [setEdges],
-  )
-
-  const handleNodeSelect = (nodeType: NodeTypes) => {
-    if (nodeSelectionData) {
-      addNodeBetween(nodeSelectionData.sourceId, nodeSelectionData.targetId, nodeType)
+      setIsSettingsModalOpen(true)
     }
-    setIsNodeSelectionOpen(false)
-    setNodeSelectionData(null)
+  }
+
+  const handleSettingsClose = () => {
+    setIsSettingsModalOpen(false)
+    setSelectedNode(null)
   }
 
   return (
     <div className="h-full relative bg-gray-50" ref={reactFlowWrapper}>
       <div className="absolute inset-0">
         <ReactFlow
-          nodes={nodes}
+          nodes={nodes.map((node) => ({
+            ...node,
+            data: {
+              ...node.data,
+              onSettings: handleNodeSettings,
+            },
+          }))}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          onNodeClick={onNodeClick}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           defaultEdgeOptions={defaultEdgeOptions}
@@ -249,18 +106,31 @@ export const WorkflowCanvas: FC<WorkflowCanvasProps> = memo(() => {
           defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
           connectionMode={ConnectionMode.Strict}
           connectionLineStyle={{ stroke: '#8b5cf6', strokeWidth: 3 }}
-        ></ReactFlow>
+        >
+          <Background />
+          <Controls />
+          <Panel position="top-right">
+            <NodeToolbar />
+          </Panel>
+          {nodes.length === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="bg-white p-6 rounded-lg shadow-lg border border-purple-200 max-w-md text-center">
+                <div className="text-4xl mb-4">🎯</div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Comece seu workflow</h3>
+                <p className="text-gray-600">
+                  Arraste um nó de início de fluxo para o canvas para começar a construir seu
+                  workflow.
+                </p>
+              </div>
+            </div>
+          )}
+        </ReactFlow>
       </div>
-      <NodeToolbar />
-      {/* <NodeSelectionModal
-        isOpen={isNodeSelectionOpen}
-        onClose={() => {
-          setIsNodeSelectionOpen(false)
-          setNodeSelectionData(null)
-        }}
-        onSelect={handleNodeSelect}
-      /> */}
-      {/* <NodeDrawer /> */}
+      <NodeSettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={handleSettingsClose}
+        node={selectedNode}
+      />
     </div>
   )
 })

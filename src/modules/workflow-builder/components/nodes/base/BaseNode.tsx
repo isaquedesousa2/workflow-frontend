@@ -42,7 +42,7 @@ export const BaseNode = memo(({ data, selected, ...props }: NodeProps<BaseNodeDa
 
   return (
     <div
-      className={`bg-white rounded-sm p-4 min-w-[400px] shadow-lg transition-all duration-200 ring-1 ring-purple-300 ${
+      className={`bg-white rounded-sm p-4 w-[400px] shadow-lg transition-all duration-200 ring-1 ring-purple-300 ${
         selected ? 'ring-2 ring-purple-500' : ''
       } ${data.validation?.validateHandlerTarget && !isValidTarget ? 'ring-2 ring-red-500' : ''} ${
         data.validation?.validateHandlerSource && !isValidSource ? 'ring-2 ring-red-500' : ''
@@ -96,7 +96,9 @@ export const BaseNode = memo(({ data, selected, ...props }: NodeProps<BaseNodeDa
       </div>
 
       <div className="space-y-2">
-        <div className="text-sm text-gray-500">{data.description}</div>
+        <p className="text-sm text-gray-500 break-words whitespace-pre-wrap line-clamp-4">
+          {data.description}
+        </p>
         {data.returnAllowed && (
           <div className="flex items-center gap-2">
             <ArrowLeftRight className="w-4 h-4 text-gray-500" />

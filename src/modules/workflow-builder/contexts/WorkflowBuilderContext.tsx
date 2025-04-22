@@ -1,102 +1,177 @@
-'use client';
+'use client'
 
-import { createContext, useContext, useState, ReactNode, FC, Dispatch, SetStateAction } from 'react';
-import { Edge, Node } from 'reactflow';
-import { NodeTypes } from '../types';
+import { useRef } from 'react'
+import {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  FC,
+  Dispatch,
+  SetStateAction,
+  useCallback,
+} from 'react'
+import {
+  Edge,
+  Node,
+  Connection,
+  NodeChange,
+  EdgeChange,
+  addEdge,
+  applyNodeChanges,
+  applyEdgeChanges,
+  ReactFlowInstance,
+} from 'reactflow'
+import { useNodeSettings } from './NodeSettingsContext'
 
 interface WorkflowBuilderContextData {
-    nodes: Node[];
-    edges: Edge[];
-    setNodes: (nodes: Node[] | ((prev: Node[]) => Node[])) => void;
-    setEdges: (edges: Edge[] | ((prev: Edge[]) => Edge[])) => void;
-    addNodeBetween: (sourceId: string, targetId: string, nodeType: NodeTypes) => void;
-    removeEdge: (edgeId: string) => void;
-    selectedNode: Node | null;
-    setSelectedNode: Dispatch<SetStateAction<Node | null>>;
-    processName: string;
-    setProcessName: Dispatch<SetStateAction<string>>;
+  nodes: Node[]
+  edges: Edge[]
+  setNodes: (nodes: Node[] | ((prev: Node[]) => Node[])) => void
+  setEdges: (edges: Edge[] | ((prev: Edge[]) => Edge[])) => void
+  removeEdge: (edgeId: string) => void
+  processName: string
+  setProcessName: Dispatch<SetStateAction<string>>
+  onConnect: (params: Connection | Edge) => void
+  onNodesChange: (changes: NodeChange[]) => void
+  onEdgesChange: (changes: EdgeChange[]) => void
+  setReactFlowInstance: Dispatch<SetStateAction<ReactFlowInstance | null>>
+  reactFlowWrapper: React.RefObject<HTMLDivElement | null>
+  onDrop: (event: React.DragEvent) => void
+  onDragOver: (event: React.DragEvent) => void
 }
 
-const WorkflowBuilderContext = createContext<WorkflowBuilderContextData>({} as WorkflowBuilderContextData);
+const WorkflowBuilderContext = createContext<WorkflowBuilderContextData>(
+  {} as WorkflowBuilderContextData,
+)
 
 export const useWorkflowBuilder = () => {
-    const context = useContext(WorkflowBuilderContext);
-    if (!context) {
-        throw new Error('useWorkflowBuilder must be used within a WorkflowBuilderProvider');
-    }
-    return context;
-};
+  const context = useContext(WorkflowBuilderContext)
+  if (!context) {
+    throw new Error('useWorkflowBuilder must be used within a WorkflowBuilderProvider')
+  }
+  return context
+}
 
 interface WorkflowBuilderProviderProps {
-    children: ReactNode;
+  children: ReactNode
 }
 
 export const WorkflowBuilderProvider: FC<WorkflowBuilderProviderProps> = ({ children }) => {
-    const [nodes, setNodes] = useState<Node[]>([]);
-    const [edges, setEdges] = useState<Edge[]>([]);
-    const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-    const [processName, setProcessName] = useState('Novo Processo');
+  const [nodes, setNodes] = useState<Node[]>([])
+  const [edges, setEdges] = useState<Edge[]>([])
+  const [processName, setProcessName] = useState('Novo Processo')
+  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)
+  const reactFlowWrapper = useRef<HTMLDivElement | null>(null)
+  const { createNodeSettings } = useNodeSettings()
 
-    const addNodeBetween = (sourceId: string, targetId: string, nodeType: NodeTypes) => {
-        const sourceNode = nodes.find((node) => node.id === sourceId);
-        const targetNode = nodes.find((node) => node.id === targetId);
+  const removeEdge = (edgeId: string) => {
+    setEdges((prev) => prev.filter((edge) => edge.id !== edgeId))
+  }
 
-        if (!sourceNode || !targetNode) return;
+  const onConnect = useCallback(
+    (params: Connection | Edge) => {
+      setEdges((eds: Edge[]) => addEdge(params, eds))
+    },
+    [setEdges, nodes, edges],
+  )
 
-        // Calcula a posição do novo node no meio do caminho
-        const x = (sourceNode.position.x + targetNode.position.x) / 2;
-        const y = (sourceNode.position.y + targetNode.position.y) / 2;
+  const onNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      setNodes((nds: Node[]) => applyNodeChanges(changes, nds))
+    },
+    [setNodes],
+  )
 
-        const newNodeId = `node-${Date.now()}`;
+  const onEdgesChange = useCallback(
+    (changes: EdgeChange[]) => {
+      setEdges((eds: Edge[]) => applyEdgeChanges(changes, eds))
+    },
+    [setEdges],
+  )
 
-        // Cria o novo node com os dados do CustomNode
-        const newNode: Node = {
-            id: newNodeId,
-            type: 'customNode',
-            position: { x, y },
-            data: {
-                label: nodeType,
-                type: nodeType,
-                icon: nodeType === 'Ação' ? '⚡' : nodeType === 'Condição' ? '❓' : '🎯',
-                description: `Nó do tipo ${nodeType}`,
-                onDelete: (nodeId: string) => {
-                    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-                    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
-                },
-            },
-        };
+  const onDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault()
 
-        // Remove a edge antiga e adiciona as novas edges
-        const newEdges = edges.filter((edge) => !(edge.source === sourceId && edge.target === targetId));
-        newEdges.push(
-            { id: `edge-${sourceId}-${newNodeId}`, source: sourceId, target: newNodeId },
-            { id: `edge-${newNodeId}-${targetId}`, source: newNodeId, target: targetId }
-        );
+      if (!reactFlowWrapper.current || !reactFlowInstance) return
 
-        setNodes((prev) => [...prev, newNode]);
-        setEdges(newEdges);
-    };
+      const bounds = reactFlowWrapper.current.getBoundingClientRect()
+      const nodeData = JSON.parse(event.dataTransfer.getData('application/reactflow'))
 
-    const removeEdge = (edgeId: string) => {
-        setEdges((prev) => prev.filter((edge) => edge.id !== edgeId));
-    };
+      const position = reactFlowInstance.project({
+        x: event.clientX - bounds.left,
+        y: event.clientY - bounds.top,
+      })
 
-    return (
-        <WorkflowBuilderContext.Provider
-            value={{
-                nodes,
-                edges,
-                setNodes,
-                setEdges,
-                addNodeBetween,
-                removeEdge,
-                selectedNode,
-                setSelectedNode,
-                processName,
-                setProcessName,
-            }}
-        >
-            {children}
-        </WorkflowBuilderContext.Provider>
-    );
-};
+      const nodeId = `${nodeData.type}-${Date.now()}`
+      const newNode: Node = {
+        id: nodeId,
+        type: nodeData.type,
+        position,
+        data: {
+          label: nodeData.label,
+          type: nodeData.type,
+          icon: nodeData.icon,
+          description: nodeData.description,
+          ...nodeData.initialData,
+          onDelete: (nodeId: string) => {
+            setNodes((nds: Node[]) => nds.filter((node: Node) => node.id !== nodeId))
+            setEdges((eds: Edge[]) =>
+              eds.filter((edge: Edge) => edge.source !== nodeId && edge.target !== nodeId),
+            )
+          },
+        },
+      }
+
+      createNodeSettings(nodeId, {
+        position: { x: 0, y: 0 },
+        id: nodeId,
+        type: nodeData.type,
+        settings: {
+          label: nodeData.label,
+          description: nodeData.description || '',
+          ...(nodeData.type === 'manualTriggerNode' && {
+            mechanism: 'NONE',
+            specificGroupId: '',
+          }),
+          ...(nodeData.type === 'cronTriggerNode' && {
+            intervalType: 'DAILY',
+            schedule: '0 9 * * *',
+          }),
+        },
+      })
+
+      setNodes((nds: Node[]) => nds.concat(newNode))
+    },
+    [reactFlowInstance, setNodes, setEdges, createNodeSettings],
+  )
+
+  const onDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+  }, [])
+
+  return (
+    <WorkflowBuilderContext.Provider
+      value={{
+        nodes,
+        edges,
+        setNodes,
+        setEdges,
+        removeEdge,
+        processName,
+        setProcessName,
+        onConnect,
+        onNodesChange,
+        onEdgesChange,
+        setReactFlowInstance,
+        onDrop,
+        reactFlowWrapper,
+        onDragOver,
+      }}
+    >
+      {children}
+    </WorkflowBuilderContext.Provider>
+  )
+}
