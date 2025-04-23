@@ -95,9 +95,9 @@ export function FormRowComponent({
         transition={{ duration: 0.2 }}
         className="relative"
       >
-        <Card
+        <div
           ref={setNodeRef}
-          className={`transition-all duration-200 ${
+          className={`transition-all duration-200 bg-white rounded-sm shadow-sm ${
             isActive ? 'ring-2 ring-purple-500 ring-offset-2' : ''
           }`}
         >
@@ -170,33 +170,35 @@ export function FormRowComponent({
               )}
             </div>
           </CardContent>
-        </Card>
+        </div>
       </motion.div>
 
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirmar exclusão</DialogTitle>
-            <DialogDescription>
-              Esta linha contém componentes. Tem certeza que deseja excluí-la?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
-              Cancelar
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                onRemoveRow()
-                setShowDeleteDialog(false)
-              }}
-            >
-              Excluir
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <div>
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent className="z-[9999]">
+            <DialogHeader>
+              <DialogTitle>Confirmar exclusão</DialogTitle>
+              <DialogDescription>
+                Esta linha contém componentes. Tem certeza que deseja excluí-la?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+                Cancelar
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  onRemoveRow()
+                  setShowDeleteDialog(false)
+                }}
+              >
+                Excluir
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </>
   )
 }

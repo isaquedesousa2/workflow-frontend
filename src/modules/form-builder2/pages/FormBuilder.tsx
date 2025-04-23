@@ -301,6 +301,7 @@ export function FormBuilderPage() {
           hasRules={true}
         />
       }
+      className="p-0"
     >
       <DndContext
         collisionDetection={pointerWithin}
@@ -308,14 +309,14 @@ export function FormBuilderPage() {
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-          <div className="md:col-span-3 relative">
-            <div className="p-4 shadow-md rounded-sm overflow-y-auto max-h-[calc(100vh-130px)] bg-white sticky top-[80px] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-full">
+          <div className="md:col-span-2 relative">
+            <div className="fixed h-[calc(100vh-18vh)] top-[calc(18vh)] overflow-y-auto p-4">
               <FormComponentPanel />
             </div>
           </div>
 
-          <div className="md:col-span-9 p-4">
+          <div className="md:col-span-10 p-8 bg-gray-100 ">
             <div className="flex justify-between items-center mb-4">
               <Button
                 onClick={addRow}
