@@ -21,9 +21,9 @@ import { useState } from 'react'
 interface ComponentConfigDialogProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  component: FormComponent | null
+  component: FormComponent | undefined
   onConfigSubmit: (component: FormComponent) => void
-  onUpdateComponent: (component: FormComponent) => void
+  onUpdateComponent: (component: FormComponent | undefined) => void
 }
 
 export function ComponentConfigDialog({

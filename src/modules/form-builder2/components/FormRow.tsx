@@ -45,7 +45,7 @@ const ColumnDroppable = ({ index, rowId }: { index: number; rowId: string }) => 
     <div key={index} className="col-span-1" ref={setNodeRef} data-column-index={index}>
       <div
         className={`border-2 border-dashed rounded-sm p-6 text-center text-muted-foreground transition-colors ${
-          isOver ? 'bg-primary/5 border-primary/30' : ''
+          isOver ? 'bg-purple-50 border-purple-300' : ''
         }`}
       >
         <div className="text-sm">Arraste para esta coluna</div>
@@ -88,13 +88,13 @@ export function FormRowComponent({
 
   return (
     <>
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9 }}
         transition={{ duration: 0.2 }}
         className="relative"
-      >
+      > */}
         <div
           ref={setNodeRef}
           className={`transition-all duration-200 bg-white rounded-sm shadow-sm ${
@@ -171,7 +171,7 @@ export function FormRowComponent({
             </div>
           </CardContent>
         </div>
-      </motion.div>
+      {/* </motion.div> */}
 
       <div>
         <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

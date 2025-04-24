@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono, Lexend_Deca } from 'next/font/google'
 import './globals.css'
+import { Toaster } from 'sonner'
 
 const lexendDeca = Lexend_Deca({
   weight: ['300', '400', '500', '600', '700'],
@@ -21,11 +22,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        cz-shortcut-listen="true"
-        className={`${lexendDeca.className} antialiased`}
-      >
+      <body cz-shortcut-listen="true" className={`${lexendDeca.className} antialiased`}>
         {children}
+        <Toaster position="top-right" />
       </body>
     </html>
   )

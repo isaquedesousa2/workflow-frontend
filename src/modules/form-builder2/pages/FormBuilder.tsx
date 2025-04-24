@@ -9,25 +9,17 @@ import {
   pointerWithin,
   type DragMoveEvent,
 } from '@dnd-kit/core'
-import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { FormComponentPanel } from '../components/FormPanel'
 import { FormCanvas } from '../components/FormCanvas'
 import type { DropIndicator, FormComponent, FormComponentType } from '../types'
-import { canAddComponentToRow, createComponent } from '../utils'
-import { useToast } from '../hooks/use-toast'
+import { canAddComponentToRow, createComponent, getAvailableColumnsInRow } from '../utils'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import { useFormBuilder } from '@/modules/form-builder2/contexts/FormBuilderContext'
 import { FormBuilderHeader } from '@/components/FormBuilderHeader'
 import { ContainerMain } from '@/components/ContainerMain'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
-import { TextInputSettings } from '../components/settings/TextInputSettings'
 import { ComponentConfigDialog } from '../components/ComponentConfigDialog'
 
 export function FormBuilderPage() {
@@ -53,8 +45,10 @@ export function FormBuilderPage() {
   const [isDraggingOver, setIsDraggingOver] = useState(false)
   const [dragOverRowId, setDragOverRowId] = useState<string | null>(null)
   const [showConfigModal, setShowConfigModal] = useState(false)
-  const [pendingComponent, setPendingComponent] = useState<FormComponent | null>(null)
-  const { toast } = useToast()
+  const [pendingComponent, setPendingComponent] = useState<{
+    component: FormComponent | undefined
+    columnIndex: number | undefined
+  } | null>(null)
 
   const handleDragStart = (event: DragStartEvent) => {
     const { id, data } = event.active
@@ -128,6 +122,7 @@ export function FormBuilderPage() {
               position: 'before',
             })
           }
+          toast.error('Não há espaço suficiente nesta linha para adicionar este componente.')
           return
         }
       }
@@ -256,9 +251,24 @@ export function FormBuilderPage() {
       if (over.data.current?.columnIndex !== undefined) {
         const componentType = active.data.current.componentType as FormComponentType
         const newComponent = createComponent(componentType)
-        setPendingComponent(newComponent)
-        setShowConfigModal(true)
-        setDragOverRowId(over.data.current?.rowId)
+
+        // Verificar se há espaço na linha
+        const rowIndex = rows.findIndex((row) => row.id === over.data.current?.rowId)
+        if (rowIndex !== -1) {
+          const row = rows[rowIndex]
+          const availableColumns = getAvailableColumnsInRow(row)
+
+          if (availableColumns >= newComponent.columnSpan) {
+            setPendingComponent({
+              component: newComponent,
+              columnIndex: over.data.current?.columnIndex,
+            })
+            setShowConfigModal(true)
+            setDragOverRowId(over.data.current?.rowId)
+          } else {
+            toast.error('Não há espaço suficiente nesta linha para adicionar este componente.')
+          }
+        }
       }
     }
   }
@@ -286,20 +296,18 @@ export function FormBuilderPage() {
   }
 
   const handleConfigSubmit = (component: FormComponent) => {
+    console.log('component', component)
     if (!component) return
 
     const rowIndex = rows.findIndex((row) => row.id === dragOverRowId)
     if (rowIndex !== -1) {
-      addFieldToRow(rowIndex, 0, component)
+      addFieldToRow(rowIndex, pendingComponent?.columnIndex!, component)
     }
 
     setShowConfigModal(false)
     setPendingComponent(null)
 
-    toast({
-      title: 'Campo adicionado',
-      description: 'O campo foi adicionado com sucesso ao formulário.',
-    })
+    toast.success('Campo adicionado com sucesso ao formulário.')
   }
 
   // Criar uma lista plana de IDs para o SortableContext
@@ -368,7 +376,7 @@ export function FormBuilderPage() {
 
         <DragOverlay>
           {activeComponent && (
-            <div className="border rounded-md p-3 bg-white shadow-xl opacity-90 scale-105 transition-transform duration-200 w-48">
+            <div className="border rounded-md p-3 bg-white shadow-xl opacity-90 scale-105 transition-transform duration-200 w-48 -rotate-3 cursor-grabbing">
               <div className="font-medium">{activeComponent.type}</div>
               <div className="text-xs text-muted-foreground mt-1">Arraste para posicionar</div>
             </div>
@@ -379,9 +387,9 @@ export function FormBuilderPage() {
       <ComponentConfigDialog
         isOpen={showConfigModal}
         onOpenChange={setShowConfigModal}
-        component={pendingComponent}
+        component={pendingComponent?.component}
         onConfigSubmit={handleConfigSubmit}
-        onUpdateComponent={setPendingComponent}
+        onUpdateComponent={(component) => setPendingComponent((prev) => ({ ...prev!, component }))}
       />
     </ContainerMain>
   )
