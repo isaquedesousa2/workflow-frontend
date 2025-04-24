@@ -12,6 +12,7 @@ export type FormComponentType =
   | 'phone'
   | 'number'
   | 'date'
+  | 'date-picker'
   | 'none'
 export type ColumnSpan = 1 | 2 | 3 | 4
 
@@ -32,6 +33,10 @@ export interface FormComponent {
   columnSpan: ColumnSpan
   description?: string
   multiple?: boolean
+  disabled?: boolean
+  readOnly?: boolean
+  minLength?: number
+  maxLength?: number
   validation?: {
     required?: boolean
     minLength?: number

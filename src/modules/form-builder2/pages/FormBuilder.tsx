@@ -20,6 +20,15 @@ import { Plus } from 'lucide-react'
 import { useFormBuilder } from '@/modules/form-builder2/contexts/FormBuilderContext'
 import { FormBuilderHeader } from '@/components/FormBuilderHeader'
 import { ContainerMain } from '@/components/ContainerMain'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { TextInputSettings } from '../components/settings/TextInputSettings'
+import { ComponentConfigDialog } from '../components/ComponentConfigDialog'
 
 export function FormBuilderPage() {
   const {
@@ -43,6 +52,8 @@ export function FormBuilderPage() {
   })
   const [isDraggingOver, setIsDraggingOver] = useState(false)
   const [dragOverRowId, setDragOverRowId] = useState<string | null>(null)
+  const [showConfigModal, setShowConfigModal] = useState(false)
+  const [pendingComponent, setPendingComponent] = useState<FormComponent | null>(null)
   const { toast } = useToast()
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -226,13 +237,6 @@ export function FormBuilderPage() {
         updatedRows[sourceRowOverIndex].components[sourceRowOverComponentIndex] = tempActive
         updatedRows[sourceRowActiveIndex].components[sourceRowActiveComponentIndex] = tempOver
         setRows(updatedRows)
-
-        // const sourceRowComponents = rows[sourceRowIndex].components
-        // const component = rows[sourceRowIndex].components[sourceIndex]
-        // const updatedRows = [...rows]
-        // console.log(component)
-        // updatedRows[rowIndex].components[targetIndex] = component
-        // setRows(updatedRows)
       }
 
       if (sourceIndex !== -1 && targetIndex !== undefined) {
@@ -250,12 +254,11 @@ export function FormBuilderPage() {
 
     if (active.data.current?.type === 'component-panel') {
       if (over.data.current?.columnIndex !== undefined) {
-        const newComponent = createComponent(
-          active.data.current?.componentType as FormComponentType,
-        )
-        const rowIndex = rows.findIndex((row) => row.id === over.data.current?.rowId)
-
-        addFieldToRow(rowIndex, over.data.current.columnIndex, newComponent.type)
+        const componentType = active.data.current.componentType as FormComponentType
+        const newComponent = createComponent(componentType)
+        setPendingComponent(newComponent)
+        setShowConfigModal(true)
+        setDragOverRowId(over.data.current?.rowId)
       }
     }
   }
@@ -282,6 +285,23 @@ export function FormBuilderPage() {
     }
   }
 
+  const handleConfigSubmit = (component: FormComponent) => {
+    if (!component) return
+
+    const rowIndex = rows.findIndex((row) => row.id === dragOverRowId)
+    if (rowIndex !== -1) {
+      addFieldToRow(rowIndex, 0, component)
+    }
+
+    setShowConfigModal(false)
+    setPendingComponent(null)
+
+    toast({
+      title: 'Campo adicionado',
+      description: 'O campo foi adicionado com sucesso ao formulário.',
+    })
+  }
+
   // Criar uma lista plana de IDs para o SortableContext
   const allComponentIds = rows.flatMap((row) =>
     row.components.filter((c): c is FormComponent => c !== null).map((c) => c.id),
@@ -301,7 +321,7 @@ export function FormBuilderPage() {
           hasRules={true}
         />
       }
-      className="p-0"
+      className="p-0 h-full bg-gray-100"
     >
       <DndContext
         collisionDetection={pointerWithin}
@@ -309,39 +329,40 @@ export function FormBuilderPage() {
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-full">
-          <div className="md:col-span-2 relative">
-            <div className="fixed h-[calc(100vh-18vh)] top-[calc(18vh)] overflow-y-auto p-4">
-              <FormComponentPanel />
-            </div>
+        <div className="flex h-[calc(100vh-64px)]">
+          {/* Painel de componentes fixo */}
+          <div className="w-64 fixed left-0 top-[133px] h-[calc(100vh-133px)] overflow-y-auto border-r bg-white">
+            <FormComponentPanel />
           </div>
 
-          <div className="md:col-span-10 p-8 bg-gray-100 ">
-            <div className="flex justify-between items-center mb-4">
-              <Button
-                onClick={addRow}
-                className="gap-1 bg-purple-500 hover:bg-purple-600 text-white rounded-sm font-medium"
-              >
-                <Plus className="h-4 w-4" /> Adicionar linha
-              </Button>
-            </div>
+          {/* Área principal com scroll */}
+          <div className="flex-1 ml-64 overflow-y-auto">
+            <div className="p-8 bg-gray-100">
+              <div className="flex justify-between items-center mb-4">
+                <Button
+                  onClick={addRow}
+                  className="gap-1 bg-purple-500 hover:bg-purple-600 text-white rounded-sm font-medium"
+                >
+                  <Plus className="h-4 w-4" /> Adicionar linha
+                </Button>
+              </div>
 
-            <SortableContext
-              items={[...allComponentIds, ...allRowIds]}
-              strategy={verticalListSortingStrategy}
-            >
-              <FormCanvas
-                rows={rows}
-                onRemoveComponent={removeField}
-                onUpdateComponent={handleUpdateComponent}
-                onRemoveRow={removeRow}
-                onRemoveRowColumns={removeRowColumns}
-                onAddRowColumns={addRowColumns}
-                dropIndicator={dropIndicator}
-                isDraggingOver={isDraggingOver}
-                dragOverRowId={dragOverRowId}
-              />
-            </SortableContext>
+              <SortableContext
+                items={[...allComponentIds, ...allRowIds]}
+                strategy={verticalListSortingStrategy}
+              >
+                <FormCanvas
+                  rows={rows}
+                  onRemoveComponent={removeField}
+                  onUpdateComponent={handleUpdateComponent}
+                  onRemoveRow={removeRow}
+                  onRemoveRowColumns={removeRowColumns}
+                  onAddRowColumns={addRowColumns}
+                  dropIndicator={dropIndicator}
+                  dragOverRowId={dragOverRowId}
+                />
+              </SortableContext>
+            </div>
           </div>
         </div>
 
@@ -354,6 +375,14 @@ export function FormBuilderPage() {
           )}
         </DragOverlay>
       </DndContext>
+
+      <ComponentConfigDialog
+        isOpen={showConfigModal}
+        onOpenChange={setShowConfigModal}
+        component={pendingComponent}
+        onConfigSubmit={handleConfigSubmit}
+        onUpdateComponent={setPendingComponent}
+      />
     </ContainerMain>
   )
 }

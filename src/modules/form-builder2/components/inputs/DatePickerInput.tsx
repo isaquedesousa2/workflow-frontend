@@ -16,6 +16,9 @@ interface BaseInputProps {
 export function DatePickerInput({ field }: BaseInputProps) {
   const [date, setDate] = useState<Date>()
 
+  const minDate = field.validation?.minDate ? new Date(field.validation.minDate) : undefined
+  const maxDate = field.validation?.maxDate ? new Date(field.validation.maxDate) : undefined
+
   return (
     <div className="space-y-2">
       {field.label && <Label className="text-sm font-medium">{field.label}</Label>}
@@ -35,7 +38,15 @@ export function DatePickerInput({ field }: BaseInputProps) {
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
-          <Calendar mode="single" selected={date} onSelect={setDate} initialFocus locale={ptBR} />
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={setDate}
+            initialFocus
+            locale={ptBR}
+            fromDate={minDate}
+            toDate={maxDate}
+          />
         </PopoverContent>
       </Popover>
       {field.description && (

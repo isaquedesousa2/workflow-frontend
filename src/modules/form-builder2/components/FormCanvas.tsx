@@ -16,7 +16,6 @@ interface FormCanvasProps {
   onRemoveRowColumns: (rowIndex: number) => void
   onAddRowColumns: (rowIndex: number) => void
   dropIndicator: DropIndicator
-  isDraggingOver: boolean
   dragOverRowId: string | null
 }
 
@@ -28,7 +27,6 @@ export function FormCanvas({
   onRemoveRowColumns,
   onAddRowColumns,
   dropIndicator,
-  isDraggingOver,
   dragOverRowId,
 }: FormCanvasProps) {
   return (

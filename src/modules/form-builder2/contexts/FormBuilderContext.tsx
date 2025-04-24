@@ -13,8 +13,13 @@ interface FormBuilderContextType {
   removeRow: (rowIndex: number) => void
   removeRowColumns: (rowIndex: number) => void
   addRowColumns: (rowIndex: number) => void
-  addFieldToRow: (rowIndex: number, columnIndex: number, fieldType: FormComponentType) => void
+  addFieldToRow: (rowIndex: number, columnIndex: number, newComponent: FormComponent) => void
   removeField: (rowIndex: number, fieldId: string) => void
+  updateComponent: (
+    rowIndex: number,
+    componentId: string,
+    updates: Partial<Omit<FormComponent, 'id'>>,
+  ) => void
 }
 
 export const FormBuilderContext = createContext<FormBuilderContextType | undefined>(undefined)
@@ -80,9 +85,8 @@ export const FormBuilderProvider = ({ children }: { children: React.ReactNode })
     }
   }
 
-  const addFieldToRow = (rowIndex: number, columnIndex: number, fieldType: FormComponentType) => {
+  const addFieldToRow = (rowIndex: number, columnIndex: number, newComponent: FormComponent) => {
     const updatedRows = [...rows]
-    const newComponent = createComponent(fieldType)
 
     if (rowIndex !== -1) {
       if (columnIndex >= 0 && columnIndex < updatedRows[rowIndex].components.length) {
@@ -113,6 +117,26 @@ export const FormBuilderProvider = ({ children }: { children: React.ReactNode })
     }
   }
 
+  const updateComponent = (
+    rowIndex: number,
+    componentId: string,
+    updates: Partial<Omit<FormComponent, 'id'>>,
+  ) => {
+    const updatedRows = [...rows]
+    const componentIndex = updatedRows[rowIndex].components.findIndex(
+      (component) => component?.id === componentId,
+    )
+
+    if (componentIndex !== -1 && updatedRows[rowIndex].components[componentIndex]) {
+      const existingComponent = updatedRows[rowIndex].components[componentIndex]!
+      updatedRows[rowIndex].components[componentIndex] = {
+        ...existingComponent,
+        ...updates,
+      }
+      setRows(updatedRows)
+    }
+  }
+
   return (
     <FormBuilderContext.Provider
       value={{
@@ -126,6 +150,7 @@ export const FormBuilderProvider = ({ children }: { children: React.ReactNode })
         addRowColumns,
         addFieldToRow,
         removeField,
+        updateComponent,
       }}
     >
       {children}
