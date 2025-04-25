@@ -13,7 +13,7 @@ import { ManualTriggerNode } from './nodes/triggers/ManualTriggerNode'
 import { CronTriggerNode } from './nodes/triggers/CronTriggerNode'
 import { DecisionNode } from './nodes/DecisionNode'
 import { JoinNode } from './nodes/JoinNode'
-import { WorkflowTriggerNode } from '@/modules/process-builder/workflow/components/nodes/triggers/WorkflowTriggerNode'
+import { WorkflowTriggerNode } from './nodes/triggers/WorkflowTriggerNode'
 import { NodeSettingsModal } from './nodes/NodeSettingsModal'
 import { Background, Controls, Panel } from 'reactflow'
 

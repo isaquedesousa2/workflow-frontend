@@ -1,9 +1,6 @@
-import { memo, useEffect, useState } from 'react'
-import { Handle, Position } from 'reactflow'
+import { memo } from 'react'
 import { NodeProps } from 'reactflow'
-import { CheckCircle2, Settings2, Trash2 } from 'lucide-react'
-import { BaseNode } from '@/modules/process-builder/workflow/components/nodes/base/BaseNode'
-import { useConnection, useNodeConnections } from '@xyflow/react'
+import { BaseNode } from './base/BaseNode'
 
 interface JoinNodeData {
   label: string

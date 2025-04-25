@@ -2,7 +2,6 @@
 
 import { FC } from 'react'
 import { Node, Edge } from 'reactflow'
-import { WorkflowBuilderProvider } from './contexts/WorkflowBuilderContext'
 import { WorkflowCanvas } from './components/WorkflowCanvas'
 import { useWorkflowBuilder } from './contexts/WorkflowBuilderContext'
 import { EditableText } from './components/EditableText'
@@ -10,8 +9,6 @@ import { Button } from '@/components/ui/button'
 import { Save } from 'lucide-react'
 import { useWorkflowValidation } from './hooks/useWorkflowValidation'
 import { toast } from 'sonner'
-import { NodeSettingsProvider } from './contexts/NodeSettingsContext'
-
 interface WorkflowData {
   nodes: Node[]
   edges: Edge[]
@@ -71,13 +68,8 @@ const WorkflowHeader: FC<{ onSave?: (workflow: WorkflowData) => void }> = ({ onS
 
 export const WorkflowBuilderModule: FC<WorkflowBuilderModuleProps> = ({ onSave }) => {
   return (
-    <NodeSettingsProvider>
-      <WorkflowBuilderProvider>
-        <WorkflowHeader onSave={onSave} />
-        <div className="w-full h-[calc(100vh-60px)] bg-[#EAF0F6]">
-          <WorkflowCanvas />
-        </div>
-      </WorkflowBuilderProvider>
-    </NodeSettingsProvider>
+    <div className="w-full h-full bg-[#EAF0F6]">
+      <WorkflowCanvas />
+    </div>
   )
 }

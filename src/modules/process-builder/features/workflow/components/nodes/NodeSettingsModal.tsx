@@ -2,12 +2,9 @@ import { FC, useState } from 'react'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
 import { Node } from 'reactflow'
 import { Button } from '@/components/ui/button'
-import {
-  ActivitySettings,
-  CronTriggerSettings,
-} from '@/modules/process-builder/workflow/components/nodes/settings'
-import { ManualTriggerSettings } from '@/modules/process-builder/workflow/components/nodes/settings'
-import { DecisionSettings } from '@/modules/process-builder/workflow/components/nodes/settings/DecisionSettings'
+import { ActivitySettings, CronTriggerSettings } from './settings'
+import { ManualTriggerSettings } from './settings'
+import { DecisionSettings } from './settings/DecisionSettings'
 
 interface NodeSettingsModalProps {
   isOpen: boolean

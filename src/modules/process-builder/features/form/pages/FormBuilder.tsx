@@ -317,20 +317,7 @@ export function FormBuilderPage() {
   const allRowIds = rows.map((row) => row.id)
 
   return (
-    <ContainerMain
-      header={
-        <FormBuilderHeader
-          formName={formName}
-          setFormName={setFormName}
-          version={1}
-          isEditable={false}
-          hasBackButton={true}
-          preview={true}
-          hasRules={true}
-        />
-      }
-      className="p-0 h-full bg-gray-100"
-    >
+    <>
       <DndContext
         collisionDetection={pointerWithin}
         onDragStart={handleDragStart}
@@ -391,6 +378,6 @@ export function FormBuilderPage() {
         onConfigSubmit={handleConfigSubmit}
         onUpdateComponent={(component) => setPendingComponent((prev) => ({ ...prev!, component }))}
       />
-    </ContainerMain>
+    </>
   )
 }

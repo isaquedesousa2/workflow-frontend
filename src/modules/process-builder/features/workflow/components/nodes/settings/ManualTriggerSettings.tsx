@@ -1,10 +1,11 @@
+'use client'
 import { FC, useEffect, useState, FormEvent } from 'react'
 import { useNodeSettings } from '../../../contexts/NodeSettingsContext'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select } from '@/components/Select'
-import { ManualTriggerNodeConfig } from '@/modules/process-builder/workflow/types/node-settings'
+import { ManualTriggerNodeConfig } from '../../../types/node-settings'
 
 interface ManualTriggerSettingsProps {
   nodeId: string

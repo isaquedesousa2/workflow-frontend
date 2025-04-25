@@ -1,8 +1,9 @@
 import { FC } from 'react'
-import { Handle, Position, NodeProps } from 'reactflow'
+import { NodeProps } from 'reactflow'
 import { BaseNode } from './base/BaseNode'
-import { useNodeSettings } from '@/modules/process-builder/workflow/contexts/NodeSettingsContext'
-import { DecisionNodeConfig } from '@/modules/process-builder/workflow/types/node-settings'
+import { useNodeSettings } from '../../contexts/NodeSettingsContext'
+import { DecisionNodeConfig } from '../../types/node-settings'
+import { Position } from '@xyflow/react'
 
 const operatorLabels: Record<string, string> = {
   '>': 'maior que',

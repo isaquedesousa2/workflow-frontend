@@ -5,11 +5,11 @@ import { Plus } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import ActivityNode from './nodes/actions/ActivityNode'
 import { WebhookNode } from './nodes/actions/WebhookNode'
-import { DecisionNode } from '@/modules/process-builder/workflow/components/nodes/DecisionNode'
+import { DecisionNode } from './nodes/DecisionNode'
 import { JoinNode } from './nodes/JoinNode'
 import { CronTriggerNode } from './nodes/triggers/CronTriggerNode'
 import { WorkflowTriggerNode } from './nodes/triggers/WorkflowTriggerNode'
-import { ManualTriggerNode } from '@/modules/process-builder/workflow/components/nodes/triggers/ManualTriggerNode'
+import { ManualTriggerNode } from './nodes/triggers/ManualTriggerNode'
 
 interface NodeOption {
   type: string

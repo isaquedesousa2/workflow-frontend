@@ -1,7 +1,7 @@
 import { memo } from 'react'
 import { NodeProps } from 'reactflow'
 import { BaseNode } from '../base/BaseNode'
-import { useNodeSettings } from '@/modules/process-builder/workflow/contexts/NodeSettingsContext'
+import { useNodeSettings } from '../../../contexts/NodeSettingsContext'
 import { Input } from '@/components/ui/input'
 import { ManualTriggerNodeConfig } from '@/modules/process-builder/workflow/types/node-settings'
 

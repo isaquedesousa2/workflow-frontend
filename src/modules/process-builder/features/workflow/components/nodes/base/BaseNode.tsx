@@ -2,7 +2,7 @@ import { memo } from 'react'
 import { Handle, Position, NodeProps, HandleProps } from 'reactflow'
 import { ArrowLeftRight, CheckCircle2, CircleX, Settings2, Trash2, Waypoints } from 'lucide-react'
 import { useNodeConnections } from '@xyflow/react'
-import { useWorkflowBuilder } from '@/modules/process-builder/workflow/contexts/WorkflowBuilderContext'
+import { useWorkflowBuilder } from '../../../contexts/WorkflowBuilderContext'
 import { cn } from '@/lib/utils'
 
 interface BaseNodeData {

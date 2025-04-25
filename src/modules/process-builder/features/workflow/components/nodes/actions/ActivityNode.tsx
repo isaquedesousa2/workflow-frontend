@@ -1,9 +1,9 @@
 import { FC, memo } from 'react'
 import { NodeProps } from 'reactflow'
-import { BaseNode } from '@/modules/process-builder/workflow/components/nodes/base/BaseNode'
+import { BaseNode } from '../base/BaseNode'
 import { Input } from '@/components/ui/input'
-import { useNodeSettings } from '@/modules/process-builder/workflow/contexts/NodeSettingsContext'
-import { ActivityNodeConfig } from '@/modules/process-builder/workflow/types/node-settings'
+import { useNodeSettings } from '../../../contexts/NodeSettingsContext'
+import { ActivityNodeConfig } from '../../../types/node-settings'
 
 export interface ActivityNodeData {
   label: string
