@@ -1,0 +1,51 @@
+import { createContext, useContext, ReactNode, useState, useCallback } from 'react'
+import { Node, Edge } from 'reactflow'
+import { FormComponent } from '@/modules/form-builder2/types'
+
+interface ProcessBuilderContextType {
+  name: string
+  setName: (name: string) => void
+  workflowNodes: Node[]
+  workflowEdges: Edge[]
+  formComponents: FormComponent[]
+  setWorkflowNodes: (nodes: Node[]) => void
+  setWorkflowEdges: (edges: Edge[]) => void
+  setFormComponents: (components: FormComponent[]) => void
+}
+
+const ProcessBuilderContext = createContext<ProcessBuilderContextType | undefined>(undefined)
+
+interface ProcessBuilderProviderProps {
+  children: ReactNode
+  initialData?: {
+    workflowNodes?: Node[]
+    workflowEdges?: Edge[]
+    formComponents?: FormComponent[]
+  }
+}
+
+export const ProcessBuilderProvider = ({ children, initialData }: ProcessBuilderProviderProps) => {
+  const [name, setName] = useState('')
+  const [workflowNodes, setWorkflowNodes] = useState<Node[]>(initialData?.workflowNodes || [])
+  const [workflowEdges, setWorkflowEdges] = useState<Edge[]>(initialData?.workflowEdges || [])
+  const [formComponents, setFormComponents] = useState<FormComponent[]>(initialData?.formComponents || [])
+
+  return <ProcessBuilderContext.Provider value={{
+    name,
+    setName,
+    workflowNodes,
+    workflowEdges,
+    formComponents,
+    setWorkflowNodes,
+    setWorkflowEdges,
+    setFormComponents,
+  }}>{children}</ProcessBuilderContext.Provider>
+}
+
+export const useProcessBuilder = () => {
+  const context = useContext(ProcessBuilderContext)
+  if (context === undefined) {
+    throw new Error('useProcessBuilder must be used within a ProcessBuilderProvider')
+  }
+  return context
+}

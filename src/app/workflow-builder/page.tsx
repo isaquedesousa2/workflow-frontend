@@ -1,4 +1,4 @@
-import { WorkflowBuilderModule } from '@/modules/workflow-builder/WorkflowBuilderModule'
+import { WorkflowBuilderModule } from '@/modules/process-builder/workflow/WorkflowBuilderModule'
 import { ReactFlowProvider } from '@xyflow/react'
 import { Toaster } from 'sonner'
 

@@ -80,3 +80,4 @@ const CollapsibleContent = ({ children, className = '' }: CollapsibleContentProp
 }
 
 export { Collapsible, CollapsibleTrigger, CollapsibleContent }
+ 

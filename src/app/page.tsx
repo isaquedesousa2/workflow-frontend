@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { WorkflowBuilderModule } from '@/modules/workflow-builder/WorkflowBuilderModule'
+import { WorkflowBuilderModule } from '@/modules/process-builder/workflow/WorkflowBuilderModule'
 
 export default function Home() {
   return (
