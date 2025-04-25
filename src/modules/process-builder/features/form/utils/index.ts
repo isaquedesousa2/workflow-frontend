@@ -15,6 +15,7 @@ export function createComponent(type: FormComponentType): FormComponent {
     columnSpan: 1,
     label: '',
     name: Math.random().toString(36).substring(2, 9),
+    lastUpdated: null,
   }
 
   switch (type) {
@@ -35,11 +36,11 @@ export function createComponent(type: FormComponentType): FormComponent {
         ...baseComponent,
         label: 'Select',
         placeholder: 'Select an option',
-        options: [
-          { value: 'option1', label: 'Option 1' },
-          { value: 'option2', label: 'Option 2' },
-          { value: 'option3', label: 'Option 3' },
-        ],
+        // options: [
+        //   { value: 'option1', label: 'Option 1' },
+        //   { value: 'option2', label: 'Option 2' },
+        //   { value: 'option3', label: 'Option 3' },
+        // ],
       }
     case 'checkbox':
       return {
@@ -56,6 +57,12 @@ export function createComponent(type: FormComponentType): FormComponent {
       return {
         ...baseComponent,
         label: 'Section Heading',
+      }
+    case 'textarea':
+      return {
+        ...baseComponent,
+        label: 'Text Area',
+        placeholder: 'Enter long text...',
       }
     default:
       return baseComponent

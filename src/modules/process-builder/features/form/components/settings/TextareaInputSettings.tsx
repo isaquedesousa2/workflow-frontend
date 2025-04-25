@@ -1,27 +1,17 @@
-import { useFormBuilder } from '../../contexts/FormBuilderContext'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { IDatePickerField } from '../../types'
-import { FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form'
+import { ITextareaField } from '../../types'
 import { useForm } from 'react-hook-form'
-import { Form } from '@/components/ui/form'
 import { useEffect } from 'react'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { DatePicker } from '@/components/DatePicker'
+import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form'
 
-interface DatePickerInputSettingsProps {
-  component: IDatePickerField
-  onUpdate: (updates: Partial<IDatePickerField>) => void
+interface TextareaInputSettingsProps {
+  component: ITextareaField
+  onUpdate: (updates: Partial<ITextareaField>) => void
 }
 
-export const DatePickerInputSettings = ({ component, onUpdate }: DatePickerInputSettingsProps) => {
+export const TextareaInputSettings = ({ component, onUpdate }: TextareaInputSettingsProps) => {
   const form = useForm({
     defaultValues: {
       label: component.label,
@@ -29,9 +19,7 @@ export const DatePickerInputSettings = ({ component, onUpdate }: DatePickerInput
       placeholder: component.placeholder,
       required: component.required,
       disabled: component.disabled,
-      mode: component.mode || 'single',
-      minDate: component.minDate || '',
-      maxDate: component.maxDate || '',
+      rowsCount: component.rowsCount || 4,
     },
   })
 
@@ -91,52 +79,16 @@ export const DatePickerInputSettings = ({ component, onUpdate }: DatePickerInput
 
         <FormField
           control={form.control}
-          name="mode"
+          name="rowsCount"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Modo de seleção</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o modo" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="single">Data única</SelectItem>
-                  <SelectItem value="range">Intervalo</SelectItem>
-                  <SelectItem value="multiple">Múltiplas datas</SelectItem>
-                </SelectContent>
-              </Select>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="minDate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Data mínima</FormLabel>
+              <FormLabel>Número de linhas</FormLabel>
               <FormControl>
-                <DatePicker
-                  value={field.value ? new Date(field.value) : undefined}
-                  onChange={(date) => field.onChange(date?.toISOString())}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="maxDate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Data máxima</FormLabel>
-              <FormControl>
-                <DatePicker
-                  value={field.value ? new Date(field.value) : undefined}
-                  onChange={(date) => field.onChange(date?.toISOString())}
+                <Input
+                  type="number"
+                  placeholder="Digite o número de linhas"
+                  {...field}
+                  onChange={(e) => field.onChange(Number(e.target.value))}
                 />
               </FormControl>
             </FormItem>

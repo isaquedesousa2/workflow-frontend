@@ -1,7 +1,7 @@
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { FormComponent } from '@/modules/form-builder2/types'
+import { FormComponent } from '../../types'
 import { useState } from 'react'
 
 interface NumberInputSettingsProps {

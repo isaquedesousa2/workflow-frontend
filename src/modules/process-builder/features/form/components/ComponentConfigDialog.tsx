@@ -13,15 +13,16 @@ import { CheckboxGroupInputSettings } from './settings/CheckboxGroupInputSetting
 import { CheckboxInputSettings } from './settings/CheckboxInputSettings'
 import { DatePickerInputSettings } from './settings/DatePickerInputSettings'
 import { EmailInputSettings } from './settings/EmailInputSettings'
-import { PhoneInputSettings } from '@/modules/form-builder2/components/settings/PhoneInputSettings'
+import { PhoneInputSettings } from './settings/PhoneInputSettings'
 import { NumberInputSettings } from './settings/NumberInputSettings'
-import { FormComponent, FormComponentType } from '../types'
+import { FormComponent } from '../types'
 import { useState } from 'react'
-
+import { toast } from 'sonner'
+import { TextareaInputSettings } from './settings/TextareaInputSettings'
 interface ComponentConfigDialogProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  component: FormComponent | undefined
+  component: any | undefined
   onConfigSubmit: (component: FormComponent) => void
   onUpdateComponent: (component: FormComponent | undefined) => void
 }
@@ -43,6 +44,8 @@ export function ComponentConfigDialog({
   const handleSubmit = () => {
     if (!component || hasError) return
     onConfigSubmit(component)
+
+    toast.success('Campo atualizado com sucesso.')
   }
 
   return (
@@ -74,12 +77,12 @@ export function ComponentConfigDialog({
           <CheckboxInputSettings component={component} onUpdate={handleUpdate} />
         )}
 
+        {component?.type === 'textarea' && (
+          <TextareaInputSettings component={component} onUpdate={handleUpdate} />
+        )}
+
         {component?.type === 'date-picker' && (
-          <DatePickerInputSettings
-            component={component}
-            onUpdate={handleUpdate}
-            onErrorChange={setHasError}
-          />
+          <DatePickerInputSettings component={component} onUpdate={handleUpdate} />
         )}
 
         {component?.type === 'email' && (
@@ -106,7 +109,16 @@ export function ComponentConfigDialog({
           />
         )}
 
+        {component?.type === 'datepicker' && (
+          <DatePickerInputSettings component={component} onUpdate={handleUpdate} />
+        )}
+
         <DialogFooter className="flex justify-end space-x-2">
+          {component?.lastUpdated && (
+            <span className="text-sm text-gray-500">
+              Última atualização: {component?.lastUpdated}
+            </span>
+          )}
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

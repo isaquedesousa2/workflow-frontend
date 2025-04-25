@@ -1,23 +1,23 @@
-import { Label } from '@/components/ui/label'
-import { FormComponent } from '@/modules/form-builder2/types'
 import { Input } from '@/components/ui/input'
+import { NumberField } from '@/modules/process-builder/features/form/types'
 
 interface BaseInputProps {
-  field: FormComponent
+  field: NumberField
 }
 
 export function NumberInput({ field }: BaseInputProps) {
+  const { placeholder, description, required, id, defaultValue, min, max, step } = field
+
   return (
-    <div className="space-y-2">
-      {field.label && <Label className="text-sm font-medium">{field.label}</Label>}
+    <div id={id} className="space-y-2">
       <Input
         type="number"
-        id={field.id}
-        placeholder={field.placeholder}
-        defaultValue={field.defaultValue}
-        min={field.validation?.min}
-        max={field.validation?.max}
-        step={field.validation?.step || 1}
+        id={id}
+        placeholder={placeholder}
+        defaultValue={defaultValue}
+        min={min}
+        max={max}
+        step={step || 1}
         className="w-full"
       />
       {field.description && (

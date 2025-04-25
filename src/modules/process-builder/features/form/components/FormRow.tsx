@@ -1,15 +1,15 @@
 'use client'
 
 import { useDroppable } from '@dnd-kit/core'
-import type { DropIndicator, FormComponent, FormRow } from '../types'
+import type { FormComponent, FormRow } from '../types'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { CardContent, CardHeader } from '@/components/ui/card'
 import { Trash2, Plus, Minus } from 'lucide-react'
-import { motion } from 'framer-motion'
 import { SortableFormComponent } from './SortableForm'
 import { getAvailableColumnsInRow, getAvailableIndices } from '../utils'
 import { Badge } from '@/components/ui/badge'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { motion } from 'framer-motion'
 import {
   Dialog,
   DialogContent,
@@ -27,8 +27,6 @@ interface FormRowComponentProps {
   onRemoveRow: () => void
   onRemoveRowColumns: () => void
   onAddRowColumns: () => void
-  dropIndicator: DropIndicator
-  isActive: boolean
   rowCount: number
 }
 
@@ -62,11 +60,9 @@ export function FormRowComponent({
   onRemoveRow,
   onRemoveRowColumns,
   onAddRowColumns,
-  dropIndicator,
-  isActive,
   rowCount,
 }: FormRowComponentProps) {
-  const { setNodeRef } = useDroppable({ id: row.id })
+  const { setNodeRef, isOver } = useDroppable({ id: row.id })
   const availableColumns = getAvailableColumnsInRow(row)
   const availableIndices = getAvailableIndices(row)
   const gridColsMap: Record<number, string> = {
@@ -88,18 +84,16 @@ export function FormRowComponent({
 
   return (
     <>
-      {/* <motion.div
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9 }}
         transition={{ duration: 0.2 }}
         className="relative"
-      > */}
+      >
         <div
           ref={setNodeRef}
-          className={`transition-all duration-200 bg-white rounded-sm shadow-sm ${
-            isActive ? 'ring-2 ring-purple-500 ring-offset-2' : ''
-          }`}
+          className={`transition-all duration-200 bg-white rounded-sm shadow-sm`}
         >
           <CardHeader className="p-3 flex flex-row items-center justify-between space-y-0 pb-2">
             <div className="flex items-center gap-2">
@@ -153,7 +147,6 @@ export function FormRowComponent({
                     <SortableFormComponent
                       rowId={row.id}
                       component={component}
-                      dropIndicator={dropIndicator}
                       componentIndex={componentIndex}
                       onRemove={onRemoveComponent}
                       onUpdate={onUpdateComponent}
@@ -171,7 +164,7 @@ export function FormRowComponent({
             </div>
           </CardContent>
         </div>
-      {/* </motion.div> */}
+      </motion.div>
 
       <div>
         <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

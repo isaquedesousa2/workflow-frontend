@@ -1,5 +1,5 @@
 import { Label } from '@/components/ui/label'
-import { FormComponent } from '@/modules/form-builder2/types'
+import { FormComponent } from '@/modules/process-builder/features/form/types'
 import { Input } from '@/components/ui/input'
 import { useState } from 'react'
 
@@ -8,7 +8,8 @@ interface BaseInputProps {
 }
 
 export function PhoneInput({ field }: BaseInputProps) {
-  const [value, setValue] = useState(field.defaultValue || '')
+  const { id, description, required, placeholder, defaultValue } = field
+  const [value, setValue] = useState(defaultValue || '')
 
   const formatPhoneNumber = (input: string) => {
     const cleaned = input.replace(/\D/g, '')
@@ -35,20 +36,18 @@ export function PhoneInput({ field }: BaseInputProps) {
   }
 
   return (
-    <div className="space-y-2">
-      {field.label && <Label className="text-sm font-medium">{field.label}</Label>}
+    <div id={id} className="space-y-2">
       <Input
         type="tel"
-        id={field.id}
-        placeholder={field.placeholder || '(00) 00000-0000'}
+        id={id}
+        placeholder={placeholder || '(00) 00000-0000'}
         value={value}
         onChange={handleChange}
         maxLength={15}
         className="w-full"
       />
-      {field.description && (
-        <p className="text-xs text-muted-foreground mt-1">{field.description}</p>
-      )}
+      {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
+      {required && <span className="text-red-500">*</span>}
     </div>
   )
 }

@@ -1,15 +1,24 @@
-import { Label } from '@/components/ui/label'
-import { FormComponent } from '@/modules/form-builder2/types'
+import { TextField } from '@/modules/process-builder/features/form/types'
 import { Input } from '@/components/ui/input'
+
 interface BaseInputProps {
-  field: FormComponent
+  field: TextField
 }
 
 export function TextInput({ field }: BaseInputProps) {
   return (
     <div className="flex flex-col gap-2">
-      {field.label && <Label htmlFor={field.id}>{field.label}</Label>}
-      <Input />
+      <Input
+        id={field.id}
+        placeholder={field.placeholder}
+        defaultValue={field.defaultValue}
+        maxLength={field.maxLength}
+        minLength={field.minLength}
+        readOnly={field.readOnly}
+        disabled={field.readOnly}
+      />
+      {field.description && <p className="text-sm text-muted-foreground">{field.description}</p>}
+      {field.required && <span className="text-red-500">*</span>}
     </div>
   )
 }

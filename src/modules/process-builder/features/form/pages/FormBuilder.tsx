@@ -17,12 +17,16 @@ import { canAddComponentToRow, createComponent, getAvailableColumnsInRow } from 
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
-import { useFormBuilder } from '@/modules/form-builder2/contexts/FormBuilderContext'
-import { FormBuilderHeader } from '@/components/FormBuilderHeader'
-import { ContainerMain } from '@/components/ContainerMain'
-import { ComponentConfigDialog } from '../components/ComponentConfigDialog'
+import { useFormBuilder } from '../contexts/FormBuilderContext'
+import { ActiveTabForm } from '@/modules/process-builder/components/ProcessBuilderHeader'
+import { ComponentConfigDialog } from '@/modules/process-builder/features/form/components/ComponentConfigDialog'
 
-export function FormBuilderPage() {
+
+type FormBuilderPageProps = {
+  activeTabForm: ActiveTabForm
+}
+
+export function FormBuilderPage({ activeTabForm }: FormBuilderPageProps) {
   const {
     rows,
     formName,
@@ -122,7 +126,6 @@ export function FormBuilderPage() {
               position: 'before',
             })
           }
-          toast.error('Não há espaço suficiente nesta linha para adicionar este componente.')
           return
         }
       }
@@ -296,7 +299,6 @@ export function FormBuilderPage() {
   }
 
   const handleConfigSubmit = (component: FormComponent) => {
-    console.log('component', component)
     if (!component) return
 
     const rowIndex = rows.findIndex((row) => row.id === dragOverRowId)
@@ -376,7 +378,7 @@ export function FormBuilderPage() {
         onOpenChange={setShowConfigModal}
         component={pendingComponent?.component}
         onConfigSubmit={handleConfigSubmit}
-        onUpdateComponent={(component) => setPendingComponent((prev) => ({ ...prev!, component }))}
+        onUpdateComponent={(component: any) => setPendingComponent((prev) => ({ ...prev!, component }))}
       />
     </>
   )

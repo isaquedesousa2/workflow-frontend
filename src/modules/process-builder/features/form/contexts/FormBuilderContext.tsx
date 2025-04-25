@@ -1,7 +1,11 @@
 'use client'
-import { toast } from '@/modules/form-builder2/hooks/use-toast'
-import { FormComponent, FormComponentType, FormRow } from '@/modules/form-builder2/types'
-import { createComponent, createRow } from '@/modules/form-builder2/utils'
+import { toast } from '../hooks/use-toast'
+import {
+  FormComponent,
+  FormComponentType,
+  FormRow,
+} from '@/modules/process-builder/features/form/types'
+import { createComponent, createRow } from '@/modules/process-builder/features/form/utils'
 import { createContext, useContext, useState } from 'react'
 
 interface FormBuilderContextType {
@@ -132,6 +136,7 @@ export const FormBuilderProvider = ({ children }: { children: React.ReactNode })
       updatedRows[rowIndex].components[componentIndex] = {
         ...existingComponent,
         ...updates,
+        lastUpdated: new Date(),
       }
       setRows(updatedRows)
     }

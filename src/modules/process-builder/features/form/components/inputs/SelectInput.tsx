@@ -1,5 +1,8 @@
-import { Label } from '@/components/ui/label'
-import { FormComponent, FormOption } from '@/modules/form-builder2/types'
+import {
+  FormComponent,
+  FormOption,
+  SelectField,
+} from '@/modules/process-builder/features/form/types'
 import {
   Select,
   SelectContent,
@@ -9,28 +12,28 @@ import {
 } from '@/components/ui/select'
 
 interface BaseInputProps {
-  field: FormComponent
+  field: SelectField
 }
 
 export function SelectInput({ field }: BaseInputProps) {
+  const { placeholder, description, required, id, options } = field
+
   return (
-    <div className="flex flex-col gap-5">
-      {field.label && <Label>{field.label}</Label>}
+    <div id={id} className="flex flex-col gap-5">
       <Select>
         <SelectTrigger>
-          <SelectValue placeholder={field.placeholder || 'Selecione uma opção'} />
+          <SelectValue placeholder={placeholder || 'Selecione uma opção'} />
         </SelectTrigger>
         <SelectContent>
-          {field.options?.map((option) => (
+          {options?.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-      {field.description && (
-        <p className="text-xs text-muted-foreground mt-1">{field.description}</p>
-      )}
+      {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
+      {required && <span className="text-red-500">*</span>}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { FormComponent } from '@/modules/form-builder2/types'
+import { FormComponent } from '@/modules/process-builder/features/form/types'
 import { useState } from 'react'
 import { PatternFormat } from 'react-number-format'
 

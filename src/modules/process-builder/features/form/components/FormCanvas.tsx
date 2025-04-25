@@ -42,8 +42,6 @@ export function FormCanvas({
           onRemoveRow={() => onRemoveRow(rowIndex)}
           onRemoveRowColumns={() => onRemoveRowColumns(rowIndex)}
           onAddRowColumns={() => onAddRowColumns(rowIndex)}
-          dropIndicator={dropIndicator}
-          isActive={dragOverRowId === row.id}
           rowCount={rows.length}
         />
       ))}

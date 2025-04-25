@@ -1,11 +1,11 @@
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { FormComponent } from '@/modules/form-builder2/types'
+import { TextField } from '../../types'
 
 interface TextInputSettingsProps {
-  component: FormComponent
-  onUpdate: (updates: Partial<FormComponent>) => void
+  component: TextField
+  onUpdate: (updates: Partial<TextField>) => void
 }
 
 export function TextInputSettings({ component, onUpdate }: TextInputSettingsProps) {
@@ -47,9 +47,9 @@ export function TextInputSettings({ component, onUpdate }: TextInputSettingsProp
           <Label htmlFor="required">Campo Obrigatório</Label>
           <Switch
             id="required"
-            checked={component.validation?.required ?? false}
+            checked={component.required ?? false}
             onCheckedChange={(checked: boolean) =>
-              onUpdate({ validation: { ...component.validation, required: checked } })
+              onUpdate({ required: checked })
             }
           />
         </div>
@@ -60,10 +60,10 @@ export function TextInputSettings({ component, onUpdate }: TextInputSettingsProp
         <Input
           id="minLength"
           type="number"
-          value={component.validation?.minLength || ''}
+          value={component.minLength || ''}
           onChange={(e) =>
             onUpdate({
-              validation: { ...component.validation, minLength: parseInt(e.target.value) || 0 },
+              minLength: parseInt(e.target.value) || 0,
             })
           }
           placeholder="Digite o tamanho mínimo"
@@ -75,10 +75,10 @@ export function TextInputSettings({ component, onUpdate }: TextInputSettingsProp
         <Input
           id="maxLength"
           type="number"
-          value={component.validation?.maxLength || ''}
+          value={component.maxLength || ''}
           onChange={(e) =>
             onUpdate({
-              validation: { ...component.validation, maxLength: parseInt(e.target.value) || 0 },
+              maxLength: parseInt(e.target.value) || 0,
             })
           }
           placeholder="Digite o tamanho máximo"
@@ -90,9 +90,9 @@ export function TextInputSettings({ component, onUpdate }: TextInputSettingsProp
           <Label htmlFor="readonly">Somente Leitura</Label>
           <Switch
             id="readonly"
-            checked={component.validation?.readonly ?? false}
+            checked={component.readOnly ?? false}
             onCheckedChange={(checked: boolean) =>
-              onUpdate({ validation: { ...component.validation, readonly: checked } })
+              onUpdate({ readOnly: checked })
             }
           />
         </div>
