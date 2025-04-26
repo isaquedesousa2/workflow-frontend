@@ -14,6 +14,9 @@ export function EmailInput({ field }: BaseInputProps) {
         id={field.id}
         placeholder={field.placeholder}
         defaultValue={field.defaultValue}
+        readOnly={field.readOnly}
+        disabled={field.readOnly}
+        required={field.required}
         className="w-full"
       />
     </BaseInput>

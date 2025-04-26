@@ -13,18 +13,21 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { useEffect } from 'react'
+import { Switch } from '@/components/ui/switch'
 
 const emailSchema = z.object({
-  label: z.string().min(1, {
-    message: 'O nome do campo é obrigatório',
-  }),
+  label: z.string().min(1, { message: 'O nome do campo é obrigatório' }),
   placeholder: z.string().optional(),
-  defaultValue: z.string().refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
-    message: 'Por favor, insira um email válido',
-  }),
+  defaultValue: z
+    .string()
+    .optional()
+    .refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+      message: 'Por favor, insira um email válido',
+    }),
   description: z.string().optional(),
+  readOnly: z.boolean().default(false),
+  required: z.boolean().default(false),
 })
-
 interface EmailInputSettingsProps {
   component: FormComponent
   onUpdate: (updates: Partial<FormComponent>) => void
@@ -43,19 +46,22 @@ export function EmailInputSettings({
       placeholder: component.placeholder || '',
       defaultValue: component.defaultValue || '',
       description: component.description || '',
+      readOnly: component.readOnly || false,
+      required: component.required || false,
     },
     mode: 'onChange',
+    criteriaMode: 'all',
   })
 
-  // Atualiza o estado de erro sempre que o formState mudar
   useEffect(() => {
-    const hasErrors = Object.keys(form.formState.errors).length > 0
     const isLabelEmpty = !form.getValues('label')
-    onErrorChange(hasErrors || isLabelEmpty)
-  }, [form.formState.errors, form, onErrorChange])
+    const hasError = !form.formState.isValid || isLabelEmpty
 
-  const handleChange = (field: keyof z.infer<typeof emailSchema>, value: string) => {
-    form.setValue(field, value, { shouldValidate: value.length > 0 })
+    onErrorChange(hasError)
+  }, [form.watch('label'), form.formState.isValid, onErrorChange])
+
+  const handleChange = (field: keyof z.infer<typeof emailSchema>, value: string | boolean) => {
+    form.setValue(field, value, { shouldValidate: true })
     onUpdate({ [field]: value })
   }
 
@@ -140,6 +146,44 @@ export function EmailInputSettings({
                 />
               </FormControl>
               <FormDescription />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="required"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center justify-between">
+                <FormLabel>Campo Obrigatório</FormLabel>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={(checked) => handleChange('required', checked)}
+                  />
+                </FormControl>
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="readOnly"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center justify-between">
+                <FormLabel>Somente Leitura</FormLabel>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={(checked) => handleChange('readOnly', checked)}
+                  />
+                </FormControl>
+              </div>
               <FormMessage />
             </FormItem>
           )}

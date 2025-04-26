@@ -64,7 +64,11 @@ export function ComponentConfigDialog({
         </DialogHeader>
 
         {component?.type === 'text' && (
-          <TextInputSettings component={component} onUpdate={handleUpdate} />
+          <TextInputSettings
+            component={component}
+            onUpdate={handleUpdate}
+            onErrorChange={handleError}
+          />
         )}
 
         {component?.type === 'title' && (
@@ -153,7 +157,7 @@ export function ComponentConfigDialog({
             className="bg-purple-600 hover:bg-purple-700 text-white"
             disabled={hasError}
           >
-            Salvar
+            Confirmar
           </Button>
         </DialogFooter>
       </DialogContent>

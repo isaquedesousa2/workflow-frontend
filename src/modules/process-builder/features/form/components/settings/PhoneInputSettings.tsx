@@ -1,8 +1,29 @@
-import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { FormComponent } from '@/modules/process-builder/features/form/types'
-import { useState } from 'react'
+import { z } from 'zod'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import { useEffect } from 'react'
 import { PatternFormat } from 'react-number-format'
+
+const phoneSchema = z.object({
+  label: z.string().min(1, {
+    message: 'O nome do campo é obrigatório',
+  }),
+  placeholder: z.string().optional(),
+  defaultValue: z.string().refine((val) => !val || /^\(\d{2}\) \d{5}-\d{4}$/.test(val), {
+    message: 'Por favor, insira um telefone válido (10 ou 11 dígitos)',
+  }),
+  description: z.string().optional(),
+})
 
 interface PhoneInputSettingsProps {
   component: FormComponent
@@ -15,74 +36,114 @@ export function PhoneInputSettings({
   onUpdate,
   onErrorChange,
 }: PhoneInputSettingsProps) {
-  const [error, setError] = useState<string>('')
+  const form = useForm<z.infer<typeof phoneSchema>>({
+    resolver: zodResolver(phoneSchema),
+    defaultValues: {
+      label: component.label || '',
+      placeholder: component.placeholder || '',
+      defaultValue: component.defaultValue || '',
+      description: component.description || '',
+    },
+    mode: 'onChange',
+  })
 
-  const validatePhone = (phone: string) => {
-    // Remove todos os caracteres não numéricos
-    const cleanPhone = phone.replace(/\D/g, '')
-    // Verifica se tem entre 10 e 11 dígitos (com ou sem DDD)
-    return cleanPhone.length >= 10 && cleanPhone.length <= 11
-  }
+  useEffect(() => {
+    const hasErrors = Object.keys(form.formState.errors).length > 0
+    const isLabelEmpty = !form.getValues('label')
+    onErrorChange(hasErrors || isLabelEmpty)
+  }, [form.formState.errors, form, onErrorChange])
 
-  const handleDefaultValueChange = (values: { value: string }) => {
-    const value = values.value
-    if (value && !validatePhone(value)) {
-      setError('Por favor, insira um telefone válido (10 ou 11 dígitos)')
-      onErrorChange(true)
-    } else {
-      setError('')
-      onErrorChange(false)
-    }
-    onUpdate({ defaultValue: value })
+  const handleChange = (field: keyof z.infer<typeof phoneSchema>, value: string) => {
+    form.setValue(field, value, { shouldValidate: true })
+    onUpdate({ [field]: value })
   }
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="label">Nome do Campo</Label>
-        <Input
-          id="label"
-          value={component.label || ''}
-          onChange={(e) => onUpdate({ label: e.target.value })}
-          placeholder="Digite o nome do campo"
+    <Form {...form}>
+      <div className="space-y-4">
+        <FormField
+          control={form.control}
+          name="label"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Nome do Campo <span className="text-red-500">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  placeholder="Digite o nome do campo"
+                  autoComplete="off"
+                  onChange={(e) => handleChange('label', e.target.value)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="placeholder">Texto de Ajuda</Label>
-        <Input
-          id="placeholder"
-          value={component.placeholder || ''}
-          onChange={(e) => onUpdate({ placeholder: e.target.value })}
-          placeholder="Digite o texto de ajuda"
+        <FormField
+          control={form.control}
+          name="placeholder"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Texto de Ajuda</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  placeholder="Digite o texto de ajuda"
+                  autoComplete="off"
+                  onChange={(e) => handleChange('placeholder', e.target.value)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="defaultValue">Valor Padrão</Label>
-        <PatternFormat
-          id="defaultValue"
-          value={component.defaultValue || ''}
-          onValueChange={handleDefaultValueChange}
-          format="(##) #####-####"
-          mask="_"
-          placeholder="(00) 00000-0000"
-          customInput={Input}
-          className="w-full"
-          type="tel"
+        <FormField
+          control={form.control}
+          name="defaultValue"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Valor Padrão</FormLabel>
+              <FormControl>
+                <PatternFormat
+                  {...field}
+                  format="(##) #####-####"
+                  mask="_"
+                  placeholder="(00) 00000-0000"
+                  autoComplete="off"
+                  customInput={Input}
+                  className="w-full"
+                  type="tel"
+                  onValueChange={(values) => handleChange('defaultValue', values.value)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        {error && <p className="text-sm text-red-500">{error}</p>}
-      </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="description">Descrição</Label>
-        <Input
-          id="description"
-          value={component.description || ''}
-          onChange={(e) => onUpdate({ description: e.target.value })}
-          placeholder="Digite a descrição do campo"
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Descrição</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  placeholder="Digite a descrição do campo"
+                  autoComplete="off"
+                  onChange={(e) => handleChange('description', e.target.value)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
       </div>
-    </div>
+    </Form>
   )
 }

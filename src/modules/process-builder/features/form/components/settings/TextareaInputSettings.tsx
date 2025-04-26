@@ -69,11 +69,14 @@ export const TextareaInputSettings = ({
           name="label"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Label</FormLabel>
+              <FormLabel>
+                Nome do campo <span className="text-red-500">*</span>
+              </FormLabel>
               <FormControl>
                 <Input
-                  placeholder="Digite o título do campo"
                   {...field}
+                  placeholder="Digite o nome do campo"
+                  autoComplete="off"
                   onChange={(e) => handleChange('label', e.target.value)}
                 />
               </FormControl>
@@ -92,6 +95,7 @@ export const TextareaInputSettings = ({
                 <Input
                   placeholder="Digite o texto de ajuda"
                   {...field}
+                  autoComplete="off"
                   onChange={(e) => handleChange('placeholder', e.target.value)}
                 />
               </FormControl>
@@ -111,6 +115,7 @@ export const TextareaInputSettings = ({
                   type="number"
                   placeholder="Digite o número de linhas"
                   {...field}
+                  autoComplete="off"
                   onChange={(e) => handleChange('rowsCount', Number(e.target.value))}
                 />
               </FormControl>
