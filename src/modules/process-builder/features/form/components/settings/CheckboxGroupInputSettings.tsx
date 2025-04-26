@@ -1,13 +1,13 @@
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { FormComponent } from '@/modules/process-builder/features/form/types'
+import { ICheckboxGroupField } from '@/modules/process-builder/features/form/types'
 import { Button } from '@/components/ui/button'
 import { Plus, Trash2 } from 'lucide-react'
 
 interface CheckboxGroupInputSettingsProps {
-  component: FormComponent
-  onUpdate: (updates: Partial<FormComponent>) => void
+  component: ICheckboxGroupField
+  onUpdate: (updates: Partial<ICheckboxGroupField>) => void
 }
 
 export function CheckboxGroupInputSettings({

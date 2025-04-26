@@ -3,10 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { useFormBuilder } from '@/modules/process-builder/features/form/contexts/FormBuilderContext'
-import { FormBuilderHeader } from '@/components/FormBuilderHeader'
 import { FormProvider, useForm } from 'react-hook-form'
-import { ContainerMain } from '@/components/ContainerMain'
-import { FormComponent } from '@/modules/process-builder/features/form/types'
 import { TextInput } from '@/modules/process-builder/features/form/components/inputs/TextInput'
 import { CheckboxInput } from '@/modules/process-builder/features/form/components/inputs/CheckboxInput'
 import { TitleInput } from '@/modules/process-builder/features/form/components/inputs/TitleInput'
@@ -17,7 +14,6 @@ import { EmailInput } from '@/modules/process-builder/features/form/components/i
 import { PhoneInput } from '@/modules/process-builder/features/form/components/inputs/PhoneInput'
 import { NumberInput } from '@/modules/process-builder/features/form/components/inputs/NumberInput'
 import { DatePickerInput } from '@/modules/process-builder/features/form/components/inputs/DatePickerInput'
-import { Label } from '@/components/ui/label'
 import { TextareaInput } from '@/modules/process-builder/features/form/components/inputs/TextareaInput'
 
 export function FormPreview() {
@@ -78,14 +74,7 @@ export function FormPreview() {
                   <div key={row.id} className={`grid gap-4 mb-6 ${gridColsMap[row.columns]}`}>
                     {row.components.map((component, index) => (
                       <div key={index} className="min-h-[1px]">
-                        {component && (
-                          <div className="flex flex-col gap-4">
-                            {component.type !== 'title' && component.type !== 'subtitle' && (
-                              <Label>{component.label}</Label>
-                            )}
-                            <RenderFieldInput field={component} />
-                          </div>
-                        )}
+                        {component && <RenderFieldInput field={component} />}
                       </div>
                     ))}
                   </div>

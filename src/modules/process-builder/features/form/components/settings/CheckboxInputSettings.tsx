@@ -1,11 +1,11 @@
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { FormComponent } from '@/modules/process-builder/features/form/types'
+import { ICheckboxField } from '@/modules/process-builder/features/form/types'
 
 interface CheckboxInputSettingsProps {
-  component: FormComponent
-  onUpdate: (updates: Partial<FormComponent>) => void
+  component: ICheckboxField
+  onUpdate: (updates: Partial<ICheckboxField>) => void
 }
 
 export function CheckboxInputSettings({ component, onUpdate }: CheckboxInputSettingsProps) {
@@ -26,10 +26,8 @@ export function CheckboxInputSettings({ component, onUpdate }: CheckboxInputSett
           <Label htmlFor="defaultValue">Marcado por Padrão</Label>
           <Switch
             id="defaultValue"
-            checked={component.defaultValue === 'true'}
-            onCheckedChange={(checked: boolean) =>
-              onUpdate({ defaultValue: checked ? 'true' : 'false' })
-            }
+            checked={component.isChecked}
+            onCheckedChange={(checked: boolean) => onUpdate({ isChecked: checked })}
           />
         </div>
       </div>

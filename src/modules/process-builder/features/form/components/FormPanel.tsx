@@ -31,8 +31,6 @@ const components = [
   { type: 'select', icon: <ListFilter className="h-4 w-4" />, label: 'Selecionar' },
   { type: 'checkbox', icon: <CheckSquare className="h-4 w-4" />, label: 'Checkbox' },
   { type: 'checkbox-group', icon: <CheckSquare className="h-4 w-4" />, label: 'Checkbox Group' },
-  { type: 'button', icon: <MousePointerClick className="h-4 w-4" />, label: 'Botão' },
-  { type: 'heading', icon: <Type className="h-4 w-4" />, label: 'Cabeçalho' },
 ]
 
 interface DraggableComponentProps {

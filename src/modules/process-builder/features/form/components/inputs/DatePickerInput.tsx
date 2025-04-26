@@ -6,21 +6,21 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { CalendarIcon } from 'lucide-react'
 import { useState } from 'react'
-import { DatePickerField } from '@/modules/process-builder/features/form/types'
+import { IDatePickerField } from '@/modules/process-builder/features/form/types'
+import { BaseInput } from '@/modules/process-builder/features/form/components/inputs/BaseInput'
 
 interface BaseInputProps {
-  field: DatePickerField
+  field: IDatePickerField
 }
 
 export function DatePickerInput({ field }: BaseInputProps) {
-  const { id, description, required } = field
   const [date, setDate] = useState<Date>()
 
   const minDate = field.minDate ? new Date(field.minDate) : undefined
   const maxDate = field.maxDate ? new Date(field.maxDate) : undefined
 
   return (
-    <div id={id} className="space-y-2">
+    <BaseInput component={field} className="space-y-2">
       <Popover>
         <PopoverTrigger asChild>
           <Button
@@ -48,8 +48,6 @@ export function DatePickerInput({ field }: BaseInputProps) {
           />
         </PopoverContent>
       </Popover>
-      {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
-      {required && <span className="text-red-500">*</span>}
-    </div>
+    </BaseInput>
   )
 }

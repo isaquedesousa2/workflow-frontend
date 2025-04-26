@@ -19,6 +19,7 @@ import { FormComponent } from '../types'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { TextareaInputSettings } from './settings/TextareaInputSettings'
+import { SelectInputSettings } from '@/modules/process-builder/features/form/components/settings/SelectInputSettings'
 interface ComponentConfigDialogProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
@@ -34,7 +35,7 @@ export function ComponentConfigDialog({
   onConfigSubmit,
   onUpdateComponent,
 }: ComponentConfigDialogProps) {
-  const [hasError, setHasError] = useState(false)
+  const [hasError, setHasError] = useState(true)
 
   const handleUpdate = (updates: Partial<FormComponent>) => {
     if (!component) return
@@ -46,6 +47,11 @@ export function ComponentConfigDialog({
     onConfigSubmit(component)
 
     toast.success('Campo atualizado com sucesso.')
+  }
+
+  const handleError = (hasError: boolean) => {
+    console.log('hasError', hasError)
+    setHasError(hasError)
   }
 
   return (
@@ -62,11 +68,19 @@ export function ComponentConfigDialog({
         )}
 
         {component?.type === 'title' && (
-          <TitleInputSettings component={component} onUpdate={handleUpdate} />
+          <TitleInputSettings
+            component={component}
+            onUpdate={handleUpdate}
+            onErrorChange={handleError}
+          />
         )}
 
         {component?.type === 'subtitle' && (
-          <SubtitleInputSettings component={component} onUpdate={handleUpdate} />
+          <SubtitleInputSettings
+            component={component}
+            onUpdate={handleUpdate}
+            onErrorChange={handleError}
+          />
         )}
 
         {component?.type === 'checkbox-group' && (
@@ -78,7 +92,11 @@ export function ComponentConfigDialog({
         )}
 
         {component?.type === 'textarea' && (
-          <TextareaInputSettings component={component} onUpdate={handleUpdate} />
+          <TextareaInputSettings
+            component={component}
+            onUpdate={handleUpdate}
+            onErrorChange={handleError}
+          />
         )}
 
         {component?.type === 'date-picker' && (
@@ -89,7 +107,7 @@ export function ComponentConfigDialog({
           <EmailInputSettings
             component={component}
             onUpdate={handleUpdate}
-            onErrorChange={setHasError}
+            onErrorChange={handleError}
           />
         )}
 
@@ -97,7 +115,7 @@ export function ComponentConfigDialog({
           <PhoneInputSettings
             component={component}
             onUpdate={handleUpdate}
-            onErrorChange={setHasError}
+            onErrorChange={handleError}
           />
         )}
 
@@ -105,12 +123,16 @@ export function ComponentConfigDialog({
           <NumberInputSettings
             component={component}
             onUpdate={handleUpdate}
-            onErrorChange={setHasError}
+            onErrorChange={handleError}
           />
         )}
 
         {component?.type === 'datepicker' && (
           <DatePickerInputSettings component={component} onUpdate={handleUpdate} />
+        )}
+
+        {component?.type === 'select' && (
+          <SelectInputSettings component={component} onUpdate={handleUpdate} />
         )}
 
         <DialogFooter className="flex justify-end space-x-2">

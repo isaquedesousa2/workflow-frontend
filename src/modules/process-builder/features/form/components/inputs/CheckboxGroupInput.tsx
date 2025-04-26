@@ -1,18 +1,17 @@
 import { Label } from '@/components/ui/label'
 import {
-  CheckboxGroupField,
-  FormComponent,
+  ICheckboxGroupField,
   FormOption,
 } from '@/modules/process-builder/features/form/types'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useState } from 'react'
+import { BaseInput } from '@/modules/process-builder/features/form/components/inputs/BaseInput'
 
 interface BaseInputProps {
-  field: CheckboxGroupField
+  field: ICheckboxGroupField
 }
 
 export function CheckboxGroupInput({ field }: BaseInputProps) {
-  const { options, multiple, id, description, required } = field
   const [selectedOptions, setSelectedOptions] = useState<string[]>([])
 
   const handleCheckboxChange = (option: FormOption) => {
@@ -21,7 +20,7 @@ export function CheckboxGroupInput({ field }: BaseInputProps) {
         return prev.filter((item) => item !== option.value)
       }
 
-      if (multiple) {
+      if (field.multiple) {
         return [...prev, option.value]
       }
 
@@ -30,9 +29,9 @@ export function CheckboxGroupInput({ field }: BaseInputProps) {
   }
 
   return (
-    <div id={id} className="space-y-2">
+    <BaseInput component={field} className="space-y-2">
       <div className="space-y-2">
-        {options?.map((option) => (
+        {field.options?.map((option: FormOption) => (
           <div key={option.value} className="flex items-center space-x-2">
             <Checkbox
               id={`${field.id}-${option.value}`}
@@ -48,8 +47,6 @@ export function CheckboxGroupInput({ field }: BaseInputProps) {
           </div>
         ))}
       </div>
-      {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
-      {required && <span className="text-red-500">*</span>}
-    </div>
+    </BaseInput>
   )
 }

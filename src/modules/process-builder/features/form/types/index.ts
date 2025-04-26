@@ -1,5 +1,3 @@
-import { IBaseField } from './fields'
-
 export type FormComponentType =
   | 'text'
   | 'textarea'
@@ -76,12 +74,12 @@ export interface NumberField extends FormComponent {
   step?: number
 }
 
-export interface CheckboxField extends FormComponent {
+export interface ICheckboxField extends FormComponent {
   type: 'checkbox'
   isChecked?: boolean
 }
 
-export interface CheckboxGroupField extends FormComponent {
+export interface ICheckboxGroupField extends FormComponent {
   type: 'checkbox-group'
   options: FormOption[]
   multiple?: boolean
@@ -100,7 +98,7 @@ export interface ITextareaField extends FormComponent {
   rowsCount?: number
 }
 
-export interface IDatePickerField extends IBaseField {
+export interface IDatePickerField extends FormComponent {
   type: 'datepicker'
   placeholder?: string
   mode?: 'single' | 'range' | 'multiple'
@@ -108,4 +106,7 @@ export interface IDatePickerField extends IBaseField {
   maxDate?: string
 }
 
-export * from './fields'
+export interface ISelectField extends FormComponent {
+  type: 'select'
+  options: FormOption[]
+}

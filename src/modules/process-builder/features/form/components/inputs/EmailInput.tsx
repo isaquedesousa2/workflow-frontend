@@ -1,25 +1,21 @@
-import { Label } from '@/components/ui/label'
 import { EmailField } from '@/modules/process-builder/features/form/types'
 import { Input } from '@/components/ui/input'
+import { BaseInput } from '@/modules/process-builder/features/form/components/inputs/BaseInput'
 
 interface BaseInputProps {
   field: EmailField
 }
 
 export function EmailInput({ field }: BaseInputProps) {
-  const { id, description, required, placeholder, defaultValue } = field
-
   return (
-    <div id={id} className="space-y-2">
+    <BaseInput component={field} className="space-y-2">
       <Input
         type="email"
-        id={id}
-        placeholder={placeholder}
-        defaultValue={defaultValue}
+        id={field.id}
+        placeholder={field.placeholder}
+        defaultValue={field.defaultValue}
         className="w-full"
       />
-      {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
-      {required && <span className="text-red-500">*</span>}
-    </div>
+    </BaseInput>
   )
 }

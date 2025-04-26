@@ -1,7 +1,29 @@
-import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { FormComponent } from '@/modules/process-builder/features/form/types'
-import { useState } from 'react'
+import { z } from 'zod'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import { useEffect } from 'react'
+
+const emailSchema = z.object({
+  label: z.string().min(1, {
+    message: 'O nome do campo é obrigatório',
+  }),
+  placeholder: z.string().optional(),
+  defaultValue: z.string().refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+    message: 'Por favor, insira um email válido',
+  }),
+  description: z.string().optional(),
+})
 
 interface EmailInputSettingsProps {
   component: FormComponent
@@ -14,69 +36,115 @@ export function EmailInputSettings({
   onUpdate,
   onErrorChange,
 }: EmailInputSettingsProps) {
-  const [error, setError] = useState<string>('')
+  const form = useForm<z.infer<typeof emailSchema>>({
+    resolver: zodResolver(emailSchema),
+    defaultValues: {
+      label: component.label || '',
+      placeholder: component.placeholder || '',
+      defaultValue: component.defaultValue || '',
+      description: component.description || '',
+    },
+    mode: 'onChange',
+  })
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
+  // Atualiza o estado de erro sempre que o formState mudar
+  useEffect(() => {
+    const hasErrors = Object.keys(form.formState.errors).length > 0
+    const isLabelEmpty = !form.getValues('label')
+    onErrorChange(hasErrors || isLabelEmpty)
+  }, [form.formState.errors, form, onErrorChange])
 
-  const handleDefaultValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    if (value && !validateEmail(value)) {
-      setError('Por favor, insira um email válido')
-      onErrorChange(true)
-    } else {
-      setError('')
-      onErrorChange(false)
-    }
-    onUpdate({ defaultValue: value })
+  const handleChange = (field: keyof z.infer<typeof emailSchema>, value: string) => {
+    form.setValue(field, value, { shouldValidate: value.length > 0 })
+    onUpdate({ [field]: value })
   }
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="label">Nome do Campo</Label>
-        <Input
-          id="label"
-          value={component.label || ''}
-          onChange={(e) => onUpdate({ label: e.target.value })}
-          placeholder="Digite o nome do campo"
+    <Form {...form}>
+      <form className="space-y-4">
+        <FormField
+          control={form.control}
+          name="label"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Título do Campo <span className="text-red-500">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  placeholder="Digite o título do campo"
+                  autoComplete="off"
+                  onChange={(e) => handleChange('label', e.target.value)}
+                />
+              </FormControl>
+              <FormDescription />
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="placeholder">Texto de Ajuda</Label>
-        <Input
-          id="placeholder"
-          value={component.placeholder || ''}
-          onChange={(e) => onUpdate({ placeholder: e.target.value })}
-          placeholder="Digite o texto de ajuda"
+        <FormField
+          control={form.control}
+          name="placeholder"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Texto de Ajuda</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  placeholder="Digite o texto de ajuda"
+                  autoComplete="off"
+                  onChange={(e) => handleChange('placeholder', e.target.value)}
+                />
+              </FormControl>
+              <FormDescription />
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="defaultValue">Valor Padrão</Label>
-        <Input
-          id="defaultValue"
-          type="email"
-          value={component.defaultValue || ''}
-          onChange={handleDefaultValueChange}
-          placeholder="exemplo@email.com"
-          pattern="[^\s@]+@[^\s@]+\.[^\s@]+"
+        <FormField
+          control={form.control}
+          name="defaultValue"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Valor Padrão</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  type="email"
+                  placeholder="exemplo@email.com"
+                  autoComplete="off"
+                  onChange={(e) => handleChange('defaultValue', e.target.value)}
+                />
+              </FormControl>
+              <FormDescription />
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        {error && <p className="text-sm text-red-500">{error}</p>}
-      </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="description">Descrição</Label>
-        <Input
-          id="description"
-          value={component.description || ''}
-          onChange={(e) => onUpdate({ description: e.target.value })}
-          placeholder="Digite a descrição do campo"
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Descrição</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  placeholder="Digite a descrição do campo"
+                  autoComplete="off"
+                  onChange={(e) => handleChange('description', e.target.value)}
+                />
+              </FormControl>
+              <FormDescription />
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-    </div>
+      </form>
+    </Form>
   )
 }

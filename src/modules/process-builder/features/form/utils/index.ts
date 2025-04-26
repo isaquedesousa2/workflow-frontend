@@ -9,63 +9,13 @@ export function cn(...inputs: ClassValue[]) {
 export function createComponent(type: FormComponentType): FormComponent {
   const id = `${type}-${Math.random().toString(36).substring(2, 9)}`
 
-  const baseComponent: FormComponent = {
+  return {
     id,
     type,
     columnSpan: 1,
     label: '',
     name: Math.random().toString(36).substring(2, 9),
     lastUpdated: null,
-  }
-
-  switch (type) {
-    case 'text':
-      return {
-        ...baseComponent,
-        label: 'Text Field',
-        placeholder: 'Enter text...',
-      }
-    case 'textarea':
-      return {
-        ...baseComponent,
-        label: 'Text Area',
-        placeholder: 'Enter long text...',
-      }
-    case 'select':
-      return {
-        ...baseComponent,
-        label: 'Select',
-        placeholder: 'Select an option',
-        // options: [
-        //   { value: 'option1', label: 'Option 1' },
-        //   { value: 'option2', label: 'Option 2' },
-        //   { value: 'option3', label: 'Option 3' },
-        // ],
-      }
-    case 'checkbox':
-      return {
-        ...baseComponent,
-        label: 'Checkbox',
-        placeholder: 'Check this option',
-      }
-    case 'button':
-      return {
-        ...baseComponent,
-        label: 'Button',
-      }
-    case 'heading':
-      return {
-        ...baseComponent,
-        label: 'Section Heading',
-      }
-    case 'textarea':
-      return {
-        ...baseComponent,
-        label: 'Text Area',
-        placeholder: 'Enter long text...',
-      }
-    default:
-      return baseComponent
   }
 }
 

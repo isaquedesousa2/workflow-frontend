@@ -16,7 +16,7 @@ import {
   ActiveTab,
   ActiveTabForm,
 } from '@/modules/process-builder/components/ProcessBuilderHeader'
-import { FormPreview } from '@/modules/process-builder/features/form/pages/FormPreview'
+import { FormPreview } from '@/modules/process-builder/features/form/components/FormPreview'
 
 const tabs = [
   {

@@ -1,4 +1,5 @@
 import { Input } from '@/components/ui/input'
+import { BaseInput } from '@/modules/process-builder/features/form/components/inputs/BaseInput'
 import { NumberField } from '@/modules/process-builder/features/form/types'
 
 interface BaseInputProps {
@@ -6,23 +7,20 @@ interface BaseInputProps {
 }
 
 export function NumberInput({ field }: BaseInputProps) {
-  const { placeholder, description, required, id, defaultValue, min, max, step } = field
-
   return (
-    <div id={id} className="space-y-2">
+    <BaseInput component={field} className="space-y-2">
       <Input
         type="number"
-        id={id}
-        placeholder={placeholder}
-        defaultValue={defaultValue}
-        min={min}
-        max={max}
-        step={step || 1}
-        className="w-full"
+        id={field.id}
+        placeholder={field.placeholder}
+        defaultValue={field.defaultValue}
+        min={field.min}
+        max={field.max}
+        step={field.step}
       />
       {field.description && (
         <p className="text-xs text-muted-foreground mt-1">{field.description}</p>
       )}
-    </div>
+    </BaseInput>
   )
 }

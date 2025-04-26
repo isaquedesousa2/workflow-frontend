@@ -1,6 +1,6 @@
 'use client'
 
-import { DropIndicator, FormComponent, FormRow } from '../types'
+import { FormComponent, FormRow } from '../types'
 import { FormRowComponent } from './FormRow'
 
 interface FormCanvasProps {
@@ -14,8 +14,6 @@ interface FormCanvasProps {
   onRemoveRow: (rowIndex: number) => void
   onRemoveRowColumns: (rowIndex: number) => void
   onAddRowColumns: (rowIndex: number) => void
-  dropIndicator: DropIndicator
-  dragOverRowId: string | null
 }
 
 export function FormCanvas({
@@ -25,8 +23,6 @@ export function FormCanvas({
   onRemoveRow,
   onRemoveRowColumns,
   onAddRowColumns,
-  dropIndicator,
-  dragOverRowId,
 }: FormCanvasProps) {
   return (
     <div className="space-y-6">
