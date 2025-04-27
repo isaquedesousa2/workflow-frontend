@@ -21,7 +21,6 @@ import { useFormBuilder } from '../contexts/FormBuilderContext'
 import { ActiveTabForm } from '@/modules/process-builder/components/ProcessBuilderHeader'
 import { ComponentConfigDialog } from '@/modules/process-builder/features/form/components/ComponentConfigDialog'
 
-
 type FormBuilderPageProps = {
   activeTabForm: ActiveTabForm
 }
@@ -355,8 +354,6 @@ export function FormBuilderPage({ activeTabForm }: FormBuilderPageProps) {
                   onRemoveRow={removeRow}
                   onRemoveRowColumns={removeRowColumns}
                   onAddRowColumns={addRowColumns}
-                  dropIndicator={dropIndicator}
-                  dragOverRowId={dragOverRowId}
                 />
               </SortableContext>
             </div>
@@ -378,7 +375,9 @@ export function FormBuilderPage({ activeTabForm }: FormBuilderPageProps) {
         onOpenChange={setShowConfigModal}
         component={pendingComponent?.component}
         onConfigSubmit={handleConfigSubmit}
-        onUpdateComponent={(component: any) => setPendingComponent((prev) => ({ ...prev!, component }))}
+        onUpdateComponent={(component: any) =>
+          setPendingComponent((prev) => ({ ...prev!, component }))
+        }
       />
     </>
   )

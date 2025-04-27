@@ -1,11 +1,11 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Save, LayoutGrid, Workflow } from 'lucide-react'
+import { Save, LayoutGrid, Workflow, Settings } from 'lucide-react'
 import { useProcessBuilder } from '../contexts/ProcessBuilderContext'
 import { cn } from '@/lib/utils'
 
-export type ActiveTab = 'form' | 'flow'
+export type ActiveTab = 'flow' | 'form' | 'settings'
 export type ActiveTabForm = 'builder' | 'preview'
 
 interface ProcessBuilderHeaderProps {
@@ -57,7 +57,7 @@ export const ProcessBuilderHeader = ({
       <div className="flex items-center justify-between border-b bg-white px-6 py-4">
         <div className="flex items-center gap-4">
           <h1 className="text-md font-medium w-[100px]">
-            {activeTab === 'form' ? 'Formulário' : 'Fluxo'}
+            {activeTab === 'form' ? 'Formulário' : activeTab === 'flow' ? 'Fluxo' : 'Configurações'}
           </h1>
           <div className="h-4 w-px bg-gray-300" />
 
@@ -81,6 +81,16 @@ export const ProcessBuilderHeader = ({
             >
               <LayoutGrid className="h-5 w-5" />
               Formulário
+            </Button>
+            <Button
+              onClick={() => activeTab !== 'settings' && setActiveTab('settings')}
+              className={cn(
+                'text-sm flex min-w-24 items-center gap-2 rounded-sm px-2 py-2 bg-transparent text-gray-600 hover:bg-gray-100',
+                activeTab === 'settings' && 'bg-purple-600 text-white hover:bg-purple-600',
+              )}
+            >
+              <Settings className="h-5 w-5" />
+              Configurações
             </Button>
           </div>
         </div>

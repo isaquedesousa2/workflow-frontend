@@ -16,6 +16,7 @@ import { JoinNode } from './nodes/JoinNode'
 import { WorkflowTriggerNode } from './nodes/triggers/WorkflowTriggerNode'
 import { NodeSettingsModal } from './nodes/NodeSettingsModal'
 import { Background, Controls, Panel } from 'reactflow'
+import { toast } from 'sonner'
 
 const nodeTypes = {
   customNode: CustomNode,
@@ -65,6 +66,14 @@ export const WorkflowCanvas: FC<WorkflowCanvasProps> = memo(() => {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
 
+  const handleConnect = (params: any) => {
+    if (params.source === params.target) {
+      toast.error('Não é possível conectar um nó a si mesmo')
+      return
+    }
+    onConnect(params)
+  }
+
   const handleNodeSettings = (nodeId: string) => {
     const node = nodes.find((n) => n.id === nodeId)
     if (node) {
@@ -92,7 +101,7 @@ export const WorkflowCanvas: FC<WorkflowCanvasProps> = memo(() => {
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
+          onConnect={handleConnect}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           defaultEdgeOptions={defaultEdgeOptions}
