@@ -78,7 +78,7 @@ export function FormValidationProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    const rules = currentValidations.rules.filter((r) => r.fieldId === fieldId)
+    const rules = currentValidations.rules.filter((r) => r.trigger?.condition?.fieldId === fieldId)
     const defaultState = {
       isVisible: true,
       isEnabled: true,

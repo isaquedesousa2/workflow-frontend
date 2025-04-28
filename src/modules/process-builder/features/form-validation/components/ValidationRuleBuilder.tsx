@@ -345,24 +345,30 @@ export function ValidationRuleBuilder({
         return {
           id: crypto.randomUUID(),
           type: 'field' as const,
-          conditions: cond.conditions.map((c) => ({
-            id: crypto.randomUUID(),
-            fieldId: c.fieldId,
-            operator: c.operator,
-            value: c.value,
-          })),
+          conditions: cond.conditions
+            .filter((c): c is Condition => !('type' in c))
+            .map((c) => ({
+              id: crypto.randomUUID(),
+              fieldId: c.fieldId,
+              operator: c.operator,
+              value: c.value,
+            })),
         }
       }
       return {
         id: crypto.randomUUID(),
         type: 'field' as const,
         conditions: [
-          {
-            id: crypto.randomUUID(),
-            fieldId: cond.fieldId,
-            operator: cond.operator,
-            value: cond.value,
-          },
+          ...(!('type' in cond)
+            ? [
+                {
+                  id: crypto.randomUUID(),
+                  fieldId: cond.fieldId,
+                  operator: cond.operator,
+                  value: cond.value,
+                },
+              ]
+            : []),
         ],
       }
     })

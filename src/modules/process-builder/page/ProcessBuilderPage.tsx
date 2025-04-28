@@ -10,7 +10,10 @@ import {
 } from '@/modules/process-builder/features/form/contexts/FormBuilderContext'
 import { ReactFlowProvider } from '@xyflow/react'
 import { NodeSettingsProvider } from '../features/workflow/contexts/NodeSettingsContext'
-import { WorkflowBuilderProvider } from '../features/workflow/contexts/WorkflowBuilderContext'
+import {
+  WorkflowBuilderProvider,
+  useWorkflowBuilder,
+} from '../features/workflow/contexts/WorkflowBuilderContext'
 import {
   ProcessBuilderHeader,
   ActiveTab as ProcessBuilderHeaderActiveTab,
@@ -18,7 +21,10 @@ import {
 } from '@/modules/process-builder/components/ProcessBuilderHeader'
 import { FormPreview } from '@/modules/process-builder/features/form/components/FormPreview'
 import { FormValidationManager } from '@/modules/process-builder/features/form-validation/components/FormValidationManager'
-import { FormValidationProvider } from '@/modules/process-builder/features/form-validation/contexts/FormValidationContext'
+import {
+  FormValidationProvider,
+  useFormValidation,
+} from '@/modules/process-builder/features/form-validation/contexts/FormValidationContext'
 
 type ActiveTab = 'flow' | 'form' | 'settings'
 
@@ -48,36 +54,76 @@ const FormContent = ({ activeTabForm }: { activeTabForm: ActiveTabForm }) => {
   )
 }
 
+const ProcessBuilderPageContent = ({
+  activeTab,
+  setActiveTab,
+  activeTabForm,
+  setActiveTabForm,
+}: {
+  activeTab: ActiveTab
+  setActiveTab: (tab: ActiveTab) => void
+  activeTabForm: ActiveTabForm
+  setActiveTabForm: (tab: ActiveTabForm) => void
+}) => {
+  const { nodes, edges, processName } = useWorkflowBuilder()
+  const { rows, formName } = useFormBuilder()
+  const { state: validationState } = useFormValidation()
+
+  const handleSave = () => {
+    const data = {
+      workflow: {
+        name: processName,
+        nodes,
+        edges,
+      },
+      form: {
+        name: formName,
+        rows,
+      },
+      validations: validationState.validations,
+    }
+    console.log('JSON para salvar:', data)
+    alert('JSON gerado! Veja o console.')
+  }
+
+  return (
+    <>
+      <ProcessBuilderHeader
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        activeTabForm={activeTabForm}
+        setActiveTabForm={setActiveTabForm}
+        onSave={handleSave}
+      />
+      {activeTab === 'flow' && <WorkflowBuilderModule />}
+      {activeTab === 'form' && <FormContent activeTabForm={activeTabForm} />}
+      {activeTab === 'settings' && (
+        <FormValidationManager
+          formComponents={[]}
+          node={{ id: 'settings', type: 'settings', position: { x: 0, y: 0 }, data: {} }}
+        />
+      )}
+    </>
+  )
+}
+
 export const ProcessBuilderPage = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('flow')
   const [activeTabForm, setActiveTabForm] = useState<ActiveTabForm>('builder')
 
   return (
-    <ContainerMain
-      title="Criar Processo"
-      header={
-        <ProcessBuilderHeader
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          activeTabForm={activeTabForm}
-          setActiveTabForm={setActiveTabForm}
-        />
-      }
-      className="p-0"
-    >
+    <ContainerMain title="Criar Processo" className="p-0">
       <FormBuilderProvider>
         <ReactFlowProvider>
           <NodeSettingsProvider>
             <WorkflowBuilderProvider>
               <FormValidationProvider>
-                {activeTab === 'flow' && <WorkflowBuilderModule />}
-                {activeTab === 'form' && <FormContent activeTabForm={activeTabForm} />}
-                {activeTab === 'settings' && (
-                  <FormValidationManager
-                    formComponents={[]}
-                    node={{ id: 'settings', type: 'settings', position: { x: 0, y: 0 }, data: {} }}
-                  />
-                )}
+                <ProcessBuilderPageContent
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  activeTabForm={activeTabForm}
+                  setActiveTabForm={setActiveTabForm}
+                />
               </FormValidationProvider>
             </WorkflowBuilderProvider>
           </NodeSettingsProvider>
