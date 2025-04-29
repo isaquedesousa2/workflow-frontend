@@ -202,6 +202,9 @@ export function ValidationRuleBuilder({
 
   const [editingRuleIndex, setEditingRuleIndex] = useState<number | null>(null)
 
+  // Adicionar estado para tipo de gatilho
+  const [triggerType, setTriggerType] = useState<'activity' | 'rule'>('activity')
+
   const updateCondition = (index: number, condition: Condition) => {
     const newConditions = [...conditionGroup.conditions]
     newConditions[index] = condition
@@ -228,7 +231,24 @@ export function ValidationRuleBuilder({
   }
 
   const validateRule = () => {
-    // Validar cenários
+    // Se o gatilho for por atividade, não validar cenários de campo
+    if (triggerType === 'activity') {
+      if (!selectedActivity) {
+        return { isValid: false, message: 'Selecione uma atividade' }
+      }
+      for (const action of thenActions) {
+        if (!action.fieldId) {
+          return { isValid: false, message: 'Selecione um campo para a ação' }
+        }
+      }
+      for (const action of elseActions) {
+        if (!action.fieldId) {
+          return { isValid: false, message: 'Selecione um campo para a ação' }
+        }
+      }
+      return { isValid: true, message: '' }
+    }
+    // Se for por regra, validar cenários normalmente
     for (const scenario of scenarios) {
       if (scenario.type === 'field') {
         for (const condition of scenario.conditions) {
@@ -254,20 +274,17 @@ export function ValidationRuleBuilder({
         }
       }
     }
-
     // Validar ações
     for (const action of thenActions) {
       if (!action.fieldId) {
         return { isValid: false, message: 'Selecione um campo para a ação' }
       }
     }
-
     for (const action of elseActions) {
       if (!action.fieldId) {
         return { isValid: false, message: 'Selecione um campo para a ação' }
       }
     }
-
     return { isValid: true, message: '' }
   }
 
@@ -278,6 +295,29 @@ export function ValidationRuleBuilder({
       return
     }
     if (scenarios.length === 0) return
+    let trigger: any
+    if (triggerType === 'activity') {
+      trigger = {
+        type: 'activity',
+        activityId: selectedActivity === 'all' ? undefined : selectedActivity,
+        condition: {
+          fieldId: thenActions[0].fieldId,
+          value: true,
+        },
+      }
+    } else {
+      trigger = {
+        type: 'rule',
+        condition: {
+          type: scenarios[0].groupType,
+          conditions: scenarios[0].conditions.map((cond) => ({
+            fieldId: cond.fieldId,
+            operator: cond.operator,
+            value: cond.value,
+          })),
+        },
+      }
+    }
     const newRule: ValidationRule = {
       condition: {
         type: 'AND',
@@ -291,14 +331,7 @@ export function ValidationRuleBuilder({
         })),
       },
       action: thenActions[0].action,
-      trigger: {
-        type: 'activity',
-        activityId: selectedActivity === 'all' ? undefined : selectedActivity,
-        condition: {
-          fieldId: thenActions[0].fieldId,
-          value: true,
-        },
-      },
+      trigger,
       elseActions: elseActions.map(({ action, fieldId }) => ({ action, fieldId })),
     }
     if (rules.length === 0 && !state.validations.find((v) => v.nodeId === nodeId)) {
@@ -434,6 +467,30 @@ export function ValidationRuleBuilder({
 
     if (editingRuleIndex === null) return
 
+    let trigger: any
+    if (triggerType === 'activity') {
+      trigger = {
+        type: 'activity',
+        activityId: selectedActivity === 'all' ? undefined : selectedActivity,
+        condition: {
+          fieldId: thenActions[0].fieldId,
+          value: true,
+        },
+      }
+    } else {
+      trigger = {
+        type: 'rule',
+        condition: {
+          type: scenarios[0].groupType,
+          conditions: scenarios[0].conditions.map((cond) => ({
+            fieldId: cond.fieldId,
+            operator: cond.operator,
+            value: cond.value,
+          })),
+        },
+      }
+    }
+
     const updatedRule: ValidationRule = {
       condition: {
         type: 'AND',
@@ -447,14 +504,7 @@ export function ValidationRuleBuilder({
         })),
       },
       action: thenActions[0].action,
-      trigger: {
-        type: 'activity',
-        activityId: selectedActivity === 'all' ? undefined : selectedActivity,
-        condition: {
-          fieldId: thenActions[0].fieldId,
-          value: true,
-        },
-      },
+      trigger,
       elseActions: elseActions.map(({ action, fieldId }) => ({ action, fieldId })),
     }
 
@@ -712,65 +762,73 @@ export function ValidationRuleBuilder({
                     <div className="flex items-center justify-between mb-3">
                       <p className="font-semibold">Quando validar</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Select value={selectedActivity} onValueChange={setSelectedActivity}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Selecione uma atividade" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Todas as atividades</SelectItem>
-                          {activityNodes.map((node) => (
-                            <SelectItem key={node.id} value={node.id}>
-                              {node.data.label || node.id}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <div className="flex flex-col gap-2 mb-2">
+                      <div className="flex items-center gap-2">
+                        <Label className="mr-2 font-medium">Tipo de gatilho:</Label>
+                        <Select
+                          value={triggerType}
+                          onValueChange={(v) => setTriggerType(v as 'activity' | 'rule')}
+                        >
+                          <SelectTrigger className="w-44">
+                            <SelectValue placeholder="Tipo de gatilho" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="activity">Por atividade</SelectItem>
+                            <SelectItem value="rule">Por regra</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {triggerType === 'activity' ? (
+                          <>
+                            O gatilho será ativado quando uma atividade específica do workflow for
+                            executada. Ideal para regras que dependem do andamento do fluxo.
+                          </>
+                        ) : (
+                          <>
+                            O gatilho será ativado quando as condições definidas abaixo forem
+                            satisfeitas, independente da atividade do workflow. Ideal para regras
+                            baseadas em valores de campos.
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-500 mt-2">
-                      Se "Todas as atividades" for selecionada, a validação será aplicada em todas
-                      as atividades do workflow.
-                    </p>
-                  </div>
-                  {scenarios.map((scenario, sidx) => (
-                    <div
-                      key={scenario.id}
-                      className="mb-4 border border-gray-200 rounded-lg bg-gray-50"
-                    >
-                      <div className="p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <p className="font-semibold">Primeiro, defina o cenário</p>
+                    <div className="mt-4">
+                      {triggerType === 'activity' ? (
+                        <>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500">Condições:</span>
-                            <Select
-                              value={scenario.groupType}
-                              onValueChange={(v) =>
-                                setScenarios(
-                                  scenarios.map((sc, i) =>
-                                    i === sidx
-                                      ? ({ ...sc, groupType: toGroupType(v) } as Scenario)
-                                      : sc,
-                                  ),
-                                )
-                              }
-                            >
-                              <SelectTrigger className="w-[200px] bg-white">
-                                <SelectValue />
+                            <Label className="w-44">Atividade:</Label>
+                            <Select value={selectedActivity} onValueChange={setSelectedActivity}>
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Selecione uma atividade" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="AND">Todas as condições</SelectItem>
-                                <SelectItem value="OR">Alguma condição</SelectItem>
+                                <SelectItem value="all">Todas as atividades</SelectItem>
+                                {activityNodes.map((node) => (
+                                  <SelectItem key={node.id} value={node.id}>
+                                    {node.data.label || node.id}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                           </div>
-                        </div>
-                        {scenario.type === 'field' ? (
-                          scenario.conditions.map((cond, cidx) => (
+                          <p className="text-xs text-gray-500 mt-2 ml-1">
+                            Se "Todas as atividades" for selecionada, a validação será aplicada em
+                            todas as atividades do workflow.
+                          </p>
+                        </>
+                      ) : (
+                        <div className="border border-blue-100 rounded-lg bg-blue-50 p-3 mt-2">
+                          <p className="text-xs text-blue-700 mb-2 font-medium">
+                            Defina as condições do gatilho (todas devem ser verdadeiras para acionar
+                            a regra):
+                          </p>
+                          {scenarios[0].conditions.map((cond, cidx) => (
                             <div key={cond.id} className="grid grid-cols-4 gap-2 mb-2">
                               <Select
                                 value={cond.fieldId}
                                 onValueChange={(v) =>
-                                  updateConditionScenario(scenario.id, cond.id, { fieldId: v })
+                                  updateConditionScenario(scenarios[0].id, cond.id, { fieldId: v })
                                 }
                               >
                                 <SelectTrigger className="w-full bg-white">
@@ -787,7 +845,7 @@ export function ValidationRuleBuilder({
                               <Select
                                 value={cond.operator}
                                 onValueChange={(v) =>
-                                  updateConditionScenario(scenario.id, cond.id, {
+                                  updateConditionScenario(scenarios[0].id, cond.id, {
                                     operator: v as any,
                                   })
                                 }
@@ -807,7 +865,7 @@ export function ValidationRuleBuilder({
                               <Select
                                 value={cond.value.type}
                                 onValueChange={(v) =>
-                                  updateConditionScenario(scenario.id, cond.id, {
+                                  updateConditionScenario(scenarios[0].id, cond.id, {
                                     value: {
                                       type: v as 'static' | 'field',
                                       ...(v === 'static' ? { staticValue: '' } : { fieldId: '' }),
@@ -827,7 +885,7 @@ export function ValidationRuleBuilder({
                                 <Select
                                   value={cond.value.fieldId}
                                   onValueChange={(v) =>
-                                    updateConditionScenario(scenario.id, cond.id, {
+                                    updateConditionScenario(scenarios[0].id, cond.id, {
                                       value: { ...cond.value, fieldId: v },
                                     })
                                   }
@@ -847,7 +905,7 @@ export function ValidationRuleBuilder({
                                 <Input
                                   value={cond.value.staticValue ?? ''}
                                   onChange={(e) =>
-                                    updateConditionScenario(scenario.id, cond.id, {
+                                    updateConditionScenario(scenarios[0].id, cond.id, {
                                       value: { type: 'static', staticValue: e.target.value },
                                     })
                                   }
@@ -855,97 +913,29 @@ export function ValidationRuleBuilder({
                                   placeholder="Digite o valor"
                                 />
                               )}
-                              {scenario.conditions.length > 1 && (
+                              {scenarios[0].conditions.length > 1 && (
                                 <Button
                                   variant="ghost"
                                   size="icon"
                                   className="absolute right-0 top-0"
-                                  onClick={() => removeConditionScenario(scenario.id, cond.id)}
+                                  onClick={() => removeConditionScenario(scenarios[0].id, cond.id)}
                                 >
                                   <X className="h-4 w-4" />
                                 </Button>
                               )}
                             </div>
-                          ))
-                        ) : (
-                          <div className="grid grid-cols-3 gap-2 mb-2">
-                            <Select
-                              value={scenario.conditions[0]?.fieldId || ''}
-                              onValueChange={(v) =>
-                                updateConditionScenario(scenario.id, scenario.conditions[0].id, {
-                                  fieldId: v,
-                                })
-                              }
-                            >
-                              <SelectTrigger className="w-full bg-white">
-                                <SelectValue placeholder="Selecione uma atividade" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {activityNodes.map((node) => (
-                                  <SelectItem key={node.id} value={node.id}>
-                                    {node.data.label || node.id}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Select
-                              value={scenario.conditions[0]?.operator || 'equals'}
-                              onValueChange={(v) =>
-                                updateConditionScenario(scenario.id, scenario.conditions[0].id, {
-                                  operator: v as any,
-                                })
-                              }
-                            >
-                              <SelectTrigger className="w-full bg-white">
-                                <SelectValue placeholder="Operador" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="equals">=</SelectItem>
-                                <SelectItem value="notEquals">≠</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Select
-                              value={scenario.conditions[0]?.value.staticValue || ''}
-                              onValueChange={(v) =>
-                                updateConditionScenario(scenario.id, scenario.conditions[0].id, {
-                                  value: { type: 'static', staticValue: v },
-                                })
-                              }
-                            >
-                              <SelectTrigger className="w-full bg-white">
-                                <SelectValue placeholder="Status" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="completed">Concluída</SelectItem>
-                                <SelectItem value="pending">Pendente</SelectItem>
-                                <SelectItem value="in_progress">Em andamento</SelectItem>
-                                <SelectItem value="blocked">Bloqueada</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        )}
-                        {scenarios.length > 1 && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="ml-2"
-                            onClick={() => removeScenario(scenario.id)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        )}
-                        <div className="mt-3">
+                          ))}
                           <Button
                             variant="outline"
-                            onClick={() => addConditionScenario(scenario.id)}
+                            onClick={() => addConditionScenario(scenarios[0].id)}
                           >
                             <Plus className="h-4 w-4" />
                             Adicionar condição
                           </Button>
                         </div>
-                      </div>
+                      )}
                     </div>
-                  ))}
+                  </div>
                   <div className="mb-4 border border-green-200 rounded-lg bg-green-50/30">
                     <div className="p-4">
                       <p className="font-semibold text-green-700 mb-3">

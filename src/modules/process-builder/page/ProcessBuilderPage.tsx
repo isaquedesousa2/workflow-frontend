@@ -26,7 +26,7 @@ import {
   useFormValidation,
 } from '@/modules/process-builder/features/form-validation/contexts/FormValidationContext'
 
-type ActiveTab = 'flow' | 'form' | 'settings'
+type ActiveTab = 'flow' | 'form' | 'rules'
 
 const FormContent = ({ activeTabForm }: { activeTabForm: ActiveTabForm }) => {
   const { rows } = useFormBuilder()
@@ -92,7 +92,7 @@ const ProcessBuilderPageContent = ({
     >
       {activeTab === 'flow' && <WorkflowBuilderModule />}
       {activeTab === 'form' && <FormContent activeTabForm={activeTabForm} />}
-      {activeTab === 'settings' && (
+      {activeTab === 'rules' && (
         <FormValidationManager
           openConditionalDialog={openConditionalDialog}
           setOpenConditionalDialog={setOpenConditionalDialog}

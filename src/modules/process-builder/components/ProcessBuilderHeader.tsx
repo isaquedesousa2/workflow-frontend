@@ -5,7 +5,7 @@ import { Save, LayoutGrid, Workflow, Settings, Plus } from 'lucide-react'
 import { useProcessBuilder } from '../contexts/ProcessBuilderContext'
 import { cn } from '@/lib/utils'
 
-export type ActiveTab = 'flow' | 'form' | 'settings'
+export type ActiveTab = 'flow' | 'form' | 'rules'
 export type ActiveTabForm = 'builder' | 'preview'
 
 interface ProcessBuilderHeaderProps {
@@ -62,7 +62,7 @@ export const ProcessBuilderHeader = ({
       <div className="flex items-center justify-between border-b bg-white px-6 py-4">
         <div className="flex items-center gap-4">
           <h1 className="text-md font-medium w-[100px]">
-            {activeTab === 'form' ? 'Formulário' : activeTab === 'flow' ? 'Fluxo' : 'Configurações'}
+            {activeTab === 'form' ? 'Formulário' : activeTab === 'flow' ? 'Fluxo' : 'Regras'}
           </h1>
           <div className="h-4 w-px bg-gray-300" />
 
@@ -88,14 +88,14 @@ export const ProcessBuilderHeader = ({
               Formulário
             </Button>
             <Button
-              onClick={() => activeTab !== 'settings' && setActiveTab('settings')}
+              onClick={() => activeTab !== 'rules' && setActiveTab('rules')}
               className={cn(
                 'text-sm flex min-w-24 items-center gap-2 rounded-sm px-2 py-2 bg-transparent text-gray-600 hover:bg-gray-100',
-                activeTab === 'settings' && 'bg-purple-600 text-white hover:bg-purple-600',
+                activeTab === 'rules' && 'bg-purple-600 text-white hover:bg-purple-600',
               )}
             >
               <Settings className="h-5 w-5" />
-              Configurações
+              Regras
             </Button>
           </div>
         </div>
@@ -123,7 +123,7 @@ export const ProcessBuilderHeader = ({
             </Button>
           </div>
         )}
-        {activeTab === 'settings' && (
+        {activeTab === 'rules' && (
           <div className="flex items-center gap-2">
             <Button
               onClick={() => setOpenConditionalDialog(true)}
