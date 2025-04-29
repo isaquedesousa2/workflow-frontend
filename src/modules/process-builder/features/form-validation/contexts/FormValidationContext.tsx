@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, ReactNode } from 'react'
+import { createContext, useContext, ReactNode, useState } from 'react'
 import {
   FormValidationContextType,
   FormValidationState,
@@ -11,60 +11,39 @@ const initialState: FormValidationState = {
   currentActivityId: undefined,
 }
 
-type Action =
-  | { type: 'ADD_VALIDATION'; payload: WorkflowValidation }
-  | { type: 'REMOVE_VALIDATION'; payload: string }
-  | { type: 'UPDATE_VALIDATION'; payload: { nodeId: string; rules: ValidationRule[] } }
-  | { type: 'SET_CURRENT_ACTIVITY'; payload: string }
-
-function validationReducer(state: FormValidationState, action: Action): FormValidationState {
-  switch (action.type) {
-    case 'ADD_VALIDATION':
-      return {
-        ...state,
-        validations: [...state.validations, action.payload],
-      }
-    case 'REMOVE_VALIDATION':
-      return {
-        ...state,
-        validations: state.validations.filter((v) => v.nodeId !== action.payload),
-      }
-    case 'UPDATE_VALIDATION':
-      return {
-        ...state,
-        validations: state.validations.map((v) =>
-          v.nodeId === action.payload.nodeId ? { ...v, rules: action.payload.rules } : v,
-        ),
-      }
-    case 'SET_CURRENT_ACTIVITY':
-      return {
-        ...state,
-        currentActivityId: action.payload,
-      }
-    default:
-      return state
-  }
-}
-
 const FormValidationContext = createContext<FormValidationContextType | undefined>(undefined)
 
 export function FormValidationProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(validationReducer, initialState)
+  const [state, setState] = useState(initialState)
 
   const addValidation = (validation: WorkflowValidation) => {
-    dispatch({ type: 'ADD_VALIDATION', payload: validation })
+    setState((prevState) => ({
+      ...prevState,
+      validations: [...prevState.validations, validation],
+    }))
   }
 
   const removeValidation = (nodeId: string) => {
-    dispatch({ type: 'REMOVE_VALIDATION', payload: nodeId })
+    setState((prevState) => ({
+      ...prevState,
+      validations: prevState.validations.filter((v) => v.nodeId !== nodeId),
+    }))
   }
 
   const updateValidation = (nodeId: string, rules: ValidationRule[]) => {
-    dispatch({ type: 'UPDATE_VALIDATION', payload: { nodeId, rules } })
+    setState((prevState) => ({
+      ...prevState,
+      validations: prevState.validations.map((v) =>
+        v.nodeId === nodeId ? { ...v, rules } : v,
+      ),
+    }))
   }
 
   const setCurrentActivity = (activityId: string) => {
-    dispatch({ type: 'SET_CURRENT_ACTIVITY', payload: activityId })
+    setState((prevState) => ({
+      ...prevState,
+      currentActivityId: activityId,
+    }))
   }
 
   const getFieldState = (fieldId: string) => {

@@ -28,21 +28,6 @@ import {
 
 type ActiveTab = 'flow' | 'form' | 'settings'
 
-const tabs = [
-  {
-    label: 'Fluxo',
-    icon: Workflow,
-  },
-  {
-    label: 'Formulário',
-    icon: File,
-  },
-  {
-    label: 'Configurações',
-    icon: Settings,
-  },
-]
-
 const FormContent = ({ activeTabForm }: { activeTabForm: ActiveTabForm }) => {
   const { rows } = useFormBuilder()
 
@@ -59,16 +44,19 @@ const ProcessBuilderPageContent = ({
   setActiveTab,
   activeTabForm,
   setActiveTabForm,
+  openConditionalDialog,
+  setOpenConditionalDialog,
 }: {
   activeTab: ActiveTab
   setActiveTab: (tab: ActiveTab) => void
   activeTabForm: ActiveTabForm
   setActiveTabForm: (tab: ActiveTabForm) => void
+  openConditionalDialog: boolean
+  setOpenConditionalDialog: (open: boolean) => void
 }) => {
   const { nodes, edges, processName } = useWorkflowBuilder()
   const { rows, formName } = useFormBuilder()
   const { state: validationState } = useFormValidation()
-
   const handleSave = () => {
     const data = {
       workflow: {
@@ -87,48 +75,55 @@ const ProcessBuilderPageContent = ({
   }
 
   return (
-    <>
-      <ProcessBuilderHeader
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        activeTabForm={activeTabForm}
-        setActiveTabForm={setActiveTabForm}
-        onSave={handleSave}
-      />
+    <ContainerMain
+      header={
+        <ProcessBuilderHeader
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          activeTabForm={activeTabForm}
+          setActiveTabForm={setActiveTabForm}
+          onSave={handleSave}
+          openConditionalDialog={openConditionalDialog}
+          setOpenConditionalDialog={setOpenConditionalDialog}
+        />
+      }
+      title="Criar Processo"
+      className="p-0"
+    >
       {activeTab === 'flow' && <WorkflowBuilderModule />}
       {activeTab === 'form' && <FormContent activeTabForm={activeTabForm} />}
       {activeTab === 'settings' && (
         <FormValidationManager
-          formComponents={[]}
-          node={{ id: 'settings', type: 'settings', position: { x: 0, y: 0 }, data: {} }}
+          openConditionalDialog={openConditionalDialog}
+          setOpenConditionalDialog={setOpenConditionalDialog}
         />
       )}
-    </>
+    </ContainerMain>
   )
 }
 
 export const ProcessBuilderPage = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('flow')
   const [activeTabForm, setActiveTabForm] = useState<ActiveTabForm>('builder')
-
+  const [openConditionalDialog, setOpenConditionalDialog] = useState(false)
   return (
-    <ContainerMain title="Criar Processo" className="p-0">
-      <FormBuilderProvider>
-        <ReactFlowProvider>
-          <NodeSettingsProvider>
-            <WorkflowBuilderProvider>
-              <FormValidationProvider>
-                <ProcessBuilderPageContent
-                  activeTab={activeTab}
-                  setActiveTab={setActiveTab}
-                  activeTabForm={activeTabForm}
-                  setActiveTabForm={setActiveTabForm}
-                />
-              </FormValidationProvider>
-            </WorkflowBuilderProvider>
-          </NodeSettingsProvider>
-        </ReactFlowProvider>
-      </FormBuilderProvider>
-    </ContainerMain>
+    <FormBuilderProvider>
+      <ReactFlowProvider>
+        <NodeSettingsProvider>
+          <WorkflowBuilderProvider>
+            <FormValidationProvider>
+              <ProcessBuilderPageContent
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                activeTabForm={activeTabForm}
+                setActiveTabForm={setActiveTabForm}
+                openConditionalDialog={openConditionalDialog}
+                setOpenConditionalDialog={setOpenConditionalDialog}
+              />
+            </FormValidationProvider>
+          </WorkflowBuilderProvider>
+        </NodeSettingsProvider>
+      </ReactFlowProvider>
+    </FormBuilderProvider>
   )
 }

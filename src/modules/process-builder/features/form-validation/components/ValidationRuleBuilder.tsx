@@ -38,6 +38,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { useFormValidation } from '@/modules/process-builder/features/form-validation/contexts/FormValidationContext'
 
 function renderConditionText(condition: ConditionGroup, formFields: any[]): string {
   if (condition.conditions.length === 0) return ''
@@ -120,6 +129,8 @@ interface ValidationRuleBuilderProps {
   onRemoveRule: (index: number) => void
   onEditRule: (index: number, rule: ValidationRule) => void
   rules: ValidationRule[]
+  openConditionalDialog: boolean
+  setOpenConditionalDialog: (open: boolean) => void
 }
 
 interface ConditionRow extends Condition {
@@ -129,6 +140,7 @@ interface Scenario {
   id: string
   type: 'activity' | 'field'
   conditions: ConditionRow[]
+  groupType: 'AND' | 'OR'
 }
 interface ActionRow {
   id: string
@@ -136,14 +148,21 @@ interface ActionRow {
   fieldId: string
 }
 
+// Função auxiliar para garantir o tipo correto
+function toGroupType(value: string): 'AND' | 'OR' {
+  return value === 'OR' ? 'OR' : 'AND'
+}
+
 export function ValidationRuleBuilder({
-  onAddRule,
-  onRemoveRule,
-  onEditRule,
-  rules,
-}: ValidationRuleBuilderProps) {
+  openConditionalDialog,
+  setOpenConditionalDialog,
+}: Omit<ValidationRuleBuilderProps, 'rules' | 'onAddRule' | 'onRemoveRule' | 'onEditRule'>) {
   const { rows } = useFormBuilder()
   const { nodes } = useWorkflowBuilder()
+  const { state, updateValidation, addValidation } = useFormValidation()
+  const nodeId = 'settings'
+  const rules = state.validations.find((v) => v.nodeId === nodeId)?.rules || []
+
   const [conditionGroup, setConditionGroup] = useState<ConditionGroup>({
     type: 'AND',
     conditions: [],
@@ -172,6 +191,7 @@ export function ValidationRuleBuilder({
           value: { type: 'static', staticValue: '' },
         },
       ],
+      groupType: 'AND',
     },
   ])
   // Estado para ações de acontecer e não acontecer
@@ -257,14 +277,12 @@ export function ValidationRuleBuilder({
       console.error(validation.message)
       return
     }
-
     if (scenarios.length === 0) return
-
     const newRule: ValidationRule = {
       condition: {
         type: 'AND',
         conditions: scenarios.map((scenario) => ({
-          type: 'AND',
+          type: scenario.groupType || 'AND',
           conditions: scenario.conditions.map((cond) => ({
             fieldId: cond.fieldId,
             operator: cond.operator,
@@ -276,11 +294,83 @@ export function ValidationRuleBuilder({
       trigger: {
         type: 'activity',
         activityId: selectedActivity === 'all' ? undefined : selectedActivity,
+        condition: {
+          fieldId: thenActions[0].fieldId,
+          value: true,
+        },
       },
+      elseActions: elseActions.map(({ action, fieldId }) => ({ action, fieldId })),
     }
-
-    onAddRule(newRule)
+    if (rules.length === 0 && !state.validations.find((v) => v.nodeId === nodeId)) {
+      addValidation({ nodeId, rules: [newRule] })
+    } else {
+      updateValidation(nodeId, [...rules, newRule])
+    }
     resetForm()
+  }
+
+  const handleRemoveRule = (index: number) => {
+    const newRules = rules.filter((_, i) => i !== index)
+    updateValidation(nodeId, newRules)
+  }
+
+  const handleEditRule = (index: number, updatedRule?: ValidationRule) => {
+    if (updatedRule) {
+      const newRules = [...rules]
+      newRules[index] = updatedRule
+      updateValidation(nodeId, newRules)
+    } else {
+      const rule = rules[index]
+      setEditingRuleIndex(index)
+      // Mapear as condições da regra existente para o formato de cenários
+      const mappedScenarios = rule.condition.conditions.map((cond) => {
+        if ('type' in cond) {
+          return {
+            id: crypto.randomUUID(),
+            type: 'field' as const,
+            groupType: cond.type as 'AND' | 'OR',
+            conditions: cond.conditions
+              .filter((c): c is Condition => !('type' in c))
+              .map((c) => ({
+                id: crypto.randomUUID(),
+                fieldId: c.fieldId,
+                operator: c.operator,
+                value: c.value,
+              })),
+          } satisfies Scenario
+        }
+        return {
+          id: crypto.randomUUID(),
+          type: 'field' as const,
+          groupType: 'AND',
+          conditions: [
+            ...(!('type' in cond)
+              ? [
+                  {
+                    id: crypto.randomUUID(),
+                    fieldId: cond.fieldId,
+                    operator: cond.operator,
+                    value: cond.value,
+                  },
+                ]
+              : []),
+          ],
+        } satisfies Scenario
+      })
+      setScenarios(mappedScenarios)
+      // Configurar as ações do "acontecer"
+      const targetFieldId = rule.trigger.condition?.fieldId || ''
+      setThenActions([
+        {
+          id: crypto.randomUUID(),
+          action: rule.action,
+          fieldId: targetFieldId,
+        },
+      ])
+      setElseActions((rule.elseActions || []).map((a) => ({ ...a, id: crypto.randomUUID() })))
+      setSelectedActivity(rule.trigger?.activityId || 'all')
+      setOpenConditionalDialog(true)
+    }
   }
 
   const removeScenario = (sid: string) => setScenarios(scenarios.filter((s) => s.id !== sid))
@@ -335,60 +425,6 @@ export function ValidationRuleBuilder({
   const updateElseAction = (id: string, data: Partial<ActionRow>) =>
     setElseActions(elseActions.map((a) => (a.id === id ? { ...a, ...data } : a)))
 
-  const handleEditRule = (index: number) => {
-    const rule = rules[index]
-    setEditingRuleIndex(index)
-
-    // Mapear as condições da regra existente para o formato de cenários
-    const mappedScenarios = rule.condition.conditions.map((cond) => {
-      if ('type' in cond) {
-        return {
-          id: crypto.randomUUID(),
-          type: 'field' as const,
-          conditions: cond.conditions
-            .filter((c): c is Condition => !('type' in c))
-            .map((c) => ({
-              id: crypto.randomUUID(),
-              fieldId: c.fieldId,
-              operator: c.operator,
-              value: c.value,
-            })),
-        }
-      }
-      return {
-        id: crypto.randomUUID(),
-        type: 'field' as const,
-        conditions: [
-          ...(!('type' in cond)
-            ? [
-                {
-                  id: crypto.randomUUID(),
-                  fieldId: cond.fieldId,
-                  operator: cond.operator,
-                  value: cond.value,
-                },
-              ]
-            : []),
-        ],
-      }
-    })
-
-    setScenarios(mappedScenarios)
-
-    // Configurar as ações do "acontecer"
-    const targetFieldId = rule.trigger.condition?.fieldId || ''
-    setThenActions([
-      {
-        id: crypto.randomUUID(),
-        action: rule.action,
-        fieldId: targetFieldId,
-      },
-    ])
-
-    setElseActions([])
-    setSelectedActivity(rule.trigger?.activityId || 'all')
-  }
-
   const handleUpdateRule = () => {
     const validation = validateRule()
     if (!validation.isValid) {
@@ -402,7 +438,7 @@ export function ValidationRuleBuilder({
       condition: {
         type: 'AND',
         conditions: scenarios.map((scenario) => ({
-          type: 'AND',
+          type: scenario.groupType || 'AND',
           conditions: scenario.conditions.map((cond) => ({
             fieldId: cond.fieldId,
             operator: cond.operator,
@@ -419,11 +455,13 @@ export function ValidationRuleBuilder({
           value: true,
         },
       },
+      elseActions: elseActions.map(({ action, fieldId }) => ({ action, fieldId })),
     }
 
-    onEditRule(editingRuleIndex, updatedRule)
+    handleEditRule(editingRuleIndex, updatedRule)
     setEditingRuleIndex(null)
     resetForm()
+    setOpenConditionalDialog(false)
   }
 
   const resetForm = () => {
@@ -439,6 +477,7 @@ export function ValidationRuleBuilder({
             value: { type: 'static', staticValue: '' },
           },
         ],
+        groupType: 'AND',
       },
     ])
     setThenActions([{ id: crypto.randomUUID(), action: 'show', fieldId: '' }])
@@ -599,41 +638,7 @@ export function ValidationRuleBuilder({
   }
 
   return (
-    <div className="relative h-full">
-      {/* Lista de regras à esquerda */}
-      <div>
-        <h2 className="text-xl font-bold">Regras de Validação</h2>
-      </div>
-      <div className="w-1/2 pr-8">
-        <div className="space-y-4">
-          {rules.map((rule, index) => (
-            <Card key={index} className="border-l-4 border-blue-500">
-              <CardHeader className="p-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium">
-                    {renderConditionText(rule.condition, formFields)}
-                  </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleEditRule(index)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => setRuleToDelete(index)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <div className="flex items-center gap-2">
-                  {getActionIcon(rule.action)}
-                  <span className="text-sm">{getActionLabel(rule.action)} campo</span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
+    <>
       <AlertDialog open={ruleToDelete !== null} onOpenChange={() => setRuleToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -647,7 +652,7 @@ export function ValidationRuleBuilder({
             <AlertDialogAction
               onClick={() => {
                 if (ruleToDelete !== null) {
-                  onRemoveRule(ruleToDelete)
+                  handleRemoveRule(ruleToDelete)
                   if (editingRuleIndex === ruleToDelete) {
                     setEditingRuleIndex(null)
                     resetForm()
@@ -661,373 +666,427 @@ export function ValidationRuleBuilder({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <div className="fixed right-0 top-0 w-1/2 h-screen overflow-y-auto p-6 bg-white border-l">
-        <div className="mb-6 mt-36">
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            Adicionar condicional em campo <HelpCircle className="h-5 w-5 text-gray-400" />
-          </h2>
-          <p className="text-gray-500 mt-1">Controle quais campos aparecerão neste formulário.</p>
-        </div>
-
-        {/* Seleção da atividade */}
-        <div className="mb-4 border border-gray-200 rounded-lg bg-gray-50 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <p className="font-semibold">Quando validar</p>
+      <div className="flex overflow-hidden h-[calc(100vh-130px)]">
+        <div className="flex-1 p-8 overflow-y-auto max-h-[calc(100vh-130px)]">
+          <h2 className="text-xl font-bold mb-6">Regras de Validação</h2>
+          <div className="space-y-4">
+            {rules.map((rule, index) => (
+              <Card key={index} className="border-l-4 border-blue-500">
+                <CardHeader className="p-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium">
+                      {renderConditionText(rule.condition, formFields)}
+                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="icon" onClick={() => handleEditRule(index)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => setRuleToDelete(index)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                  <div className="flex items-center gap-2">
+                    {getActionIcon(rule.action)}
+                    <span className="text-sm">{getActionLabel(rule.action)} campo</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-
-          <div className="flex items-center gap-2">
-            <Select value={selectedActivity} onValueChange={setSelectedActivity}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione uma atividade" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as atividades</SelectItem>
-                {activityNodes.map((node) => (
-                  <SelectItem key={node.id} value={node.id}>
-                    {node.data.label || node.id}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <p className="text-sm text-gray-500 mt-2">
-            Se "Todas as atividades" for selecionada, a validação será aplicada em todas as
-            atividades do workflow.
-          </p>
-        </div>
-
-        {/* Cenários */}
-        {scenarios.map((scenario, sidx) => (
-          <div key={scenario.id} className="mb-4 border border-gray-200 rounded-lg bg-gray-50">
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <p className="font-semibold">Primeiro, defina o cenário</p>
-              </div>
-
-              {scenario.type === 'field' ? (
-                scenario.conditions.map((cond, cidx) => (
-                  <div key={cond.id} className="grid grid-cols-4 gap-2 mb-2">
-                    <Select
-                      value={cond.fieldId}
-                      onValueChange={(v) =>
-                        updateConditionScenario(scenario.id, cond.id, { fieldId: v })
-                      }
-                    >
-                      <SelectTrigger className="w-full bg-white">
-                        <SelectValue placeholder="Selecione um campo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {formFields.map((f) => (
-                          <SelectItem key={f.id} value={f.id}>
-                            {f.label || f.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Select
-                      value={cond.operator}
-                      onValueChange={(v) =>
-                        updateConditionScenario(scenario.id, cond.id, { operator: v as any })
-                      }
-                    >
-                      <SelectTrigger className="w-full bg-white">
-                        <SelectValue placeholder="Operador" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="equals">=</SelectItem>
-                        <SelectItem value="notEquals">≠</SelectItem>
-                        <SelectItem value="contains">Contém</SelectItem>
-                        <SelectItem value="notContains">Não contém</SelectItem>
-                        <SelectItem value="greaterThan">&gt;</SelectItem>
-                        <SelectItem value="lessThan">&lt;</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    <Select
-                      value={cond.value.type}
-                      onValueChange={(v) =>
-                        updateConditionScenario(scenario.id, cond.id, {
-                          value: {
-                            type: v as 'static' | 'field',
-                            ...(v === 'static' ? { staticValue: '' } : { fieldId: '' }),
-                          },
-                        })
-                      }
-                    >
-                      <SelectTrigger className="w-full bg-white">
-                        <SelectValue placeholder="Tipo de valor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="static">Valor Padrão</SelectItem>
-                        <SelectItem value="field">Outro Campo</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    {cond.value.type === 'field' ? (
-                      <Select
-                        value={cond.value.fieldId}
-                        onValueChange={(v) =>
-                          updateConditionScenario(scenario.id, cond.id, {
-                            value: { ...cond.value, fieldId: v },
-                          })
-                        }
-                      >
-                        <SelectTrigger className="w-full bg-white">
-                          <SelectValue placeholder="Selecione um campo" />
+          <div className="mt-8">
+            <Dialog open={openConditionalDialog} onOpenChange={setOpenConditionalDialog}>
+              <DialogContent className="max-w-5xl flex flex-col p-0">
+                <DialogHeader className="p-6 pb-0">
+                  <DialogTitle>Adicionar condicional em campo</DialogTitle>
+                </DialogHeader>
+                <div className="flex-1 overflow-y-auto p-6 pt-0">
+                  <div className="mb-6">
+                    <p className="text-gray-500 mt-1">
+                      Controle quais campos aparecerão neste formulário.
+                    </p>
+                  </div>
+                  <div className="mb-4 border border-gray-200 rounded-lg bg-gray-50 p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="font-semibold">Quando validar</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Select value={selectedActivity} onValueChange={setSelectedActivity}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Selecione uma atividade" />
                         </SelectTrigger>
                         <SelectContent>
-                          {formFields.map((f) => (
-                            <SelectItem key={f.id} value={f.id}>
-                              {f.label || f.name}
+                          <SelectItem value="all">Todas as atividades</SelectItem>
+                          {activityNodes.map((node) => (
+                            <SelectItem key={node.id} value={node.id}>
+                              {node.data.label || node.id}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                    ) : (
-                      <Input
-                        value={cond.value.staticValue ?? ''}
-                        onChange={(e) =>
-                          updateConditionScenario(scenario.id, cond.id, {
-                            value: { type: 'static', staticValue: e.target.value },
-                          })
-                        }
-                        className="w-full bg-white"
-                        placeholder="Digite o valor"
-                      />
-                    )}
-
-                    {scenario.conditions.length > 1 && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-0 top-0"
-                        onClick={() => removeConditionScenario(scenario.id, cond.id)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
+                    </div>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Se "Todas as atividades" for selecionada, a validação será aplicada em todas
+                      as atividades do workflow.
+                    </p>
                   </div>
-                ))
-              ) : (
-                <div className="grid grid-cols-3 gap-2 mb-2">
-                  <Select
-                    value={scenario.conditions[0]?.fieldId || ''}
-                    onValueChange={(v) =>
-                      updateConditionScenario(scenario.id, scenario.conditions[0].id, {
-                        fieldId: v,
-                      })
-                    }
-                  >
-                    <SelectTrigger className="w-full bg-white">
-                      <SelectValue placeholder="Selecione uma atividade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {activityNodes.map((node) => (
-                        <SelectItem key={node.id} value={node.id}>
-                          {node.data.label || node.id}
-                        </SelectItem>
+                  {scenarios.map((scenario, sidx) => (
+                    <div
+                      key={scenario.id}
+                      className="mb-4 border border-gray-200 rounded-lg bg-gray-50"
+                    >
+                      <div className="p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="font-semibold">Primeiro, defina o cenário</p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">Condições:</span>
+                            <Select
+                              value={scenario.groupType}
+                              onValueChange={(v) =>
+                                setScenarios(
+                                  scenarios.map((sc, i) =>
+                                    i === sidx
+                                      ? ({ ...sc, groupType: toGroupType(v) } as Scenario)
+                                      : sc,
+                                  ),
+                                )
+                              }
+                            >
+                              <SelectTrigger className="w-[200px] bg-white">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="AND">Todas as condições</SelectItem>
+                                <SelectItem value="OR">Alguma condição</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        {scenario.type === 'field' ? (
+                          scenario.conditions.map((cond, cidx) => (
+                            <div key={cond.id} className="grid grid-cols-4 gap-2 mb-2">
+                              <Select
+                                value={cond.fieldId}
+                                onValueChange={(v) =>
+                                  updateConditionScenario(scenario.id, cond.id, { fieldId: v })
+                                }
+                              >
+                                <SelectTrigger className="w-full bg-white">
+                                  <SelectValue placeholder="Selecione um campo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {formFields.map((f) => (
+                                    <SelectItem key={f.id} value={f.id}>
+                                      {f.label || f.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Select
+                                value={cond.operator}
+                                onValueChange={(v) =>
+                                  updateConditionScenario(scenario.id, cond.id, {
+                                    operator: v as any,
+                                  })
+                                }
+                              >
+                                <SelectTrigger className="w-full bg-white">
+                                  <SelectValue placeholder="Operador" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="equals">=</SelectItem>
+                                  <SelectItem value="notEquals">≠</SelectItem>
+                                  <SelectItem value="contains">Contém</SelectItem>
+                                  <SelectItem value="notContains">Não contém</SelectItem>
+                                  <SelectItem value="greaterThan">&gt;</SelectItem>
+                                  <SelectItem value="lessThan">&lt;</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Select
+                                value={cond.value.type}
+                                onValueChange={(v) =>
+                                  updateConditionScenario(scenario.id, cond.id, {
+                                    value: {
+                                      type: v as 'static' | 'field',
+                                      ...(v === 'static' ? { staticValue: '' } : { fieldId: '' }),
+                                    },
+                                  })
+                                }
+                              >
+                                <SelectTrigger className="w-full bg-white">
+                                  <SelectValue placeholder="Tipo de valor" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="static">Valor Padrão</SelectItem>
+                                  <SelectItem value="field">Outro Campo</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              {cond.value.type === 'field' ? (
+                                <Select
+                                  value={cond.value.fieldId}
+                                  onValueChange={(v) =>
+                                    updateConditionScenario(scenario.id, cond.id, {
+                                      value: { ...cond.value, fieldId: v },
+                                    })
+                                  }
+                                >
+                                  <SelectTrigger className="w-full bg-white">
+                                    <SelectValue placeholder="Selecione um campo" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {formFields.map((f) => (
+                                      <SelectItem key={f.id} value={f.id}>
+                                        {f.label || f.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                <Input
+                                  value={cond.value.staticValue ?? ''}
+                                  onChange={(e) =>
+                                    updateConditionScenario(scenario.id, cond.id, {
+                                      value: { type: 'static', staticValue: e.target.value },
+                                    })
+                                  }
+                                  className="w-full bg-white"
+                                  placeholder="Digite o valor"
+                                />
+                              )}
+                              {scenario.conditions.length > 1 && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="absolute right-0 top-0"
+                                  onClick={() => removeConditionScenario(scenario.id, cond.id)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="grid grid-cols-3 gap-2 mb-2">
+                            <Select
+                              value={scenario.conditions[0]?.fieldId || ''}
+                              onValueChange={(v) =>
+                                updateConditionScenario(scenario.id, scenario.conditions[0].id, {
+                                  fieldId: v,
+                                })
+                              }
+                            >
+                              <SelectTrigger className="w-full bg-white">
+                                <SelectValue placeholder="Selecione uma atividade" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {activityNodes.map((node) => (
+                                  <SelectItem key={node.id} value={node.id}>
+                                    {node.data.label || node.id}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Select
+                              value={scenario.conditions[0]?.operator || 'equals'}
+                              onValueChange={(v) =>
+                                updateConditionScenario(scenario.id, scenario.conditions[0].id, {
+                                  operator: v as any,
+                                })
+                              }
+                            >
+                              <SelectTrigger className="w-full bg-white">
+                                <SelectValue placeholder="Operador" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="equals">=</SelectItem>
+                                <SelectItem value="notEquals">≠</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Select
+                              value={scenario.conditions[0]?.value.staticValue || ''}
+                              onValueChange={(v) =>
+                                updateConditionScenario(scenario.id, scenario.conditions[0].id, {
+                                  value: { type: 'static', staticValue: v },
+                                })
+                              }
+                            >
+                              <SelectTrigger className="w-full bg-white">
+                                <SelectValue placeholder="Status" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="completed">Concluída</SelectItem>
+                                <SelectItem value="pending">Pendente</SelectItem>
+                                <SelectItem value="in_progress">Em andamento</SelectItem>
+                                <SelectItem value="blocked">Bloqueada</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                        {scenarios.length > 1 && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="ml-2"
+                            onClick={() => removeScenario(scenario.id)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <div className="mt-3">
+                          <Button
+                            variant="outline"
+                            onClick={() => addConditionScenario(scenario.id)}
+                          >
+                            <Plus className="h-4 w-4" />
+                            Adicionar condição
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="mb-4 border border-green-200 rounded-lg bg-green-50/30">
+                    <div className="p-4">
+                      <p className="font-semibold text-green-700 mb-3">
+                        Se o cenário que você definiu{' '}
+                        <span className="font-bold text-green-600">acontecer</span>, faça isso
+                      </p>
+                      {thenActions.map((a, idx) => (
+                        <div key={a.id} className="grid grid-cols-2 gap-2 mb-2">
+                          <Select
+                            value={a.action}
+                            onValueChange={(v) => updateThenAction(a.id, { action: v as any })}
+                          >
+                            <SelectTrigger className="w-full bg-white">
+                              <SelectValue placeholder="Selecione ação" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="show">Mostrar</SelectItem>
+                              <SelectItem value="hide">Ocultar</SelectItem>
+                              <SelectItem value="enable">Habilitar</SelectItem>
+                              <SelectItem value="disable">Desabilitar</SelectItem>
+                              <SelectItem value="require">Obrigatório</SelectItem>
+                              <SelectItem value="optional">Opcional</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Select
+                            value={a.fieldId}
+                            onValueChange={(v) => updateThenAction(a.id, { fieldId: v })}
+                          >
+                            <SelectTrigger className="w-full bg-white">
+                              <SelectValue placeholder="Selecione um campo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {formFields.map((f) => (
+                                <SelectItem key={f.id} value={f.id}>
+                                  {f.label || f.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {thenActions.length > 1 && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-0 top-0"
+                              onClick={() => removeThenAction(a.id)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select
-                    value={scenario.conditions[0]?.operator || 'equals'}
-                    onValueChange={(v) =>
-                      updateConditionScenario(scenario.id, scenario.conditions[0].id, {
-                        operator: v as any,
-                      })
-                    }
-                  >
-                    <SelectTrigger className="w-full bg-white">
-                      <SelectValue placeholder="Operador" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="equals">=</SelectItem>
-                      <SelectItem value="notEquals">≠</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <Select
-                    value={scenario.conditions[0]?.value.staticValue || ''}
-                    onValueChange={(v) =>
-                      updateConditionScenario(scenario.id, scenario.conditions[0].id, {
-                        value: { type: 'static', staticValue: v },
-                      })
-                    }
-                  >
-                    <SelectTrigger className="w-full bg-white">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="completed">Concluída</SelectItem>
-                      <SelectItem value="pending">Pendente</SelectItem>
-                      <SelectItem value="in_progress">Em andamento</SelectItem>
-                      <SelectItem value="blocked">Bloqueada</SelectItem>
-                    </SelectContent>
-                  </Select>
+                      <Button variant="outline" onClick={addThenAction}>
+                        <Plus className="h-4 w-4" />
+                        Adicionar ação
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="mb-4 border border-red-200 rounded-lg bg-red-50/30">
+                    <div className="p-4">
+                      <p className="font-semibold text-red-700 mb-3">
+                        Se o cenário que você definiu{' '}
+                        <span className="font-bold text-red-600">não acontecer</span>, então faça
+                        isso
+                      </p>
+                      {elseActions.map((a, idx) => (
+                        <div key={a.id} className="grid grid-cols-2 gap-2 mb-2">
+                          <Select
+                            value={a.action}
+                            onValueChange={(v) => updateElseAction(a.id, { action: v as any })}
+                          >
+                            <SelectTrigger className="w-full bg-white">
+                              <SelectValue placeholder="Selecione ação" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="show">Mostrar</SelectItem>
+                              <SelectItem value="hide">Ocultar</SelectItem>
+                              <SelectItem value="enable">Habilitar</SelectItem>
+                              <SelectItem value="disable">Desabilitar</SelectItem>
+                              <SelectItem value="require">Obrigatório</SelectItem>
+                              <SelectItem value="optional">Opcional</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Select
+                            value={a.fieldId}
+                            onValueChange={(v) => updateElseAction(a.id, { fieldId: v })}
+                          >
+                            <SelectTrigger className="w-full bg-white">
+                              <SelectValue placeholder="Selecione um campo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {formFields.map((f) => (
+                                <SelectItem key={f.id} value={f.id}>
+                                  {f.label || f.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {elseActions.length > 1 && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-0 top-0"
+                              onClick={() => removeElseAction(a.id)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                      <Button variant="outline" onClick={addElseAction}>
+                        <Plus className="h-4 w-4" />
+                        Adicionar ação
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              )}
-
-              {scenarios.length > 1 && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="ml-2"
-                  onClick={() => removeScenario(scenario.id)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-              <div className="mt-3">
-                <Button variant="outline" onClick={() => addConditionScenario(scenario.id)}>
-                  <Plus className="h-4 w-4" />
-                  Adicionar condição
-                </Button>
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {/* Ações - acontecer */}
-        <div className="mb-4 border border-green-200 rounded-lg bg-green-50/30">
-          <div className="p-4">
-            <p className="font-semibold text-green-700 mb-3">
-              Se o cenário que você definiu{' '}
-              <span className="font-bold text-green-600">acontecer</span>, faça isso
-            </p>
-            {thenActions.map((a, idx) => (
-              <div key={a.id} className="grid grid-cols-2 gap-2 mb-2">
-                <Select
-                  value={a.action}
-                  onValueChange={(v) => updateThenAction(a.id, { action: v as any })}
-                >
-                  <SelectTrigger className="w-full bg-white">
-                    <SelectValue placeholder="Selecione ação" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="show">Mostrar</SelectItem>
-                    <SelectItem value="hide">Ocultar</SelectItem>
-                    <SelectItem value="enable">Habilitar</SelectItem>
-                    <SelectItem value="disable">Desabilitar</SelectItem>
-                    <SelectItem value="require">Obrigatório</SelectItem>
-                    <SelectItem value="optional">Opcional</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select
-                  value={a.fieldId}
-                  onValueChange={(v) => updateThenAction(a.id, { fieldId: v })}
-                >
-                  <SelectTrigger className="w-full bg-white">
-                    <SelectValue placeholder="Selecione um campo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {formFields.map((f) => (
-                      <SelectItem key={f.id} value={f.id}>
-                        {f.label || f.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {thenActions.length > 1 && (
+                <DialogFooter className="sticky bottom-0 left-0 w-full bg-background border-t p-6 mt-0 z-10 flex justify-end gap-2">
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-0 top-0"
-                    onClick={() => removeThenAction(a.id)}
+                    variant="outline"
+                    onClick={() => {
+                      setEditingRuleIndex(null)
+                      resetForm()
+                      setOpenConditionalDialog(false)
+                      document.activeElement && (document.activeElement as HTMLElement).blur()
+                    }}
                   >
-                    <X className="h-4 w-4" />
+                    Cancelar
                   </Button>
-                )}
-              </div>
-            ))}
-            <Button variant="outline" onClick={addThenAction}>
-              <Plus className="h-4 w-4" />
-              Adicionar ação
-            </Button>
-          </div>
-        </div>
-
-        {/* Ações - não acontecer */}
-        <div className="mb-4 border border-red-200 rounded-lg bg-red-50/30">
-          <div className="p-4">
-            <p className="font-semibold text-red-700 mb-3">
-              Se o cenário que você definiu{' '}
-              <span className="font-bold text-red-600">não acontecer</span>, então faça isso
-            </p>
-            {elseActions.map((a, idx) => (
-              <div key={a.id} className="grid grid-cols-2 gap-2 mb-2">
-                <Select
-                  value={a.action}
-                  onValueChange={(v) => updateElseAction(a.id, { action: v as any })}
-                >
-                  <SelectTrigger className="w-full bg-white">
-                    <SelectValue placeholder="Selecione ação" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="show">Mostrar</SelectItem>
-                    <SelectItem value="hide">Ocultar</SelectItem>
-                    <SelectItem value="enable">Habilitar</SelectItem>
-                    <SelectItem value="disable">Desabilitar</SelectItem>
-                    <SelectItem value="require">Obrigatório</SelectItem>
-                    <SelectItem value="optional">Opcional</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select
-                  value={a.fieldId}
-                  onValueChange={(v) => updateElseAction(a.id, { fieldId: v })}
-                >
-                  <SelectTrigger className="w-full bg-white">
-                    <SelectValue placeholder="Selecione um campo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {formFields.map((f) => (
-                      <SelectItem key={f.id} value={f.id}>
-                        {f.label || f.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {elseActions.length > 1 && (
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-0 top-0"
-                    onClick={() => removeElseAction(a.id)}
+                    className="bg-blue-600 text-white"
+                    onClick={editingRuleIndex !== null ? handleUpdateRule : handleAddRule}
+                    disabled={!validateRule().isValid}
                   >
-                    <X className="h-4 w-4" />
+                    {editingRuleIndex !== null ? 'Atualizar condicional' : 'Adicionar condicional'}
                   </Button>
-                )}
-              </div>
-            ))}
-            <Button variant="outline" onClick={addElseAction}>
-              <Plus className="h-4 w-4" />
-              Adicionar ação
-            </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
-        </div>
-
-        {/* Rodapé */}
-        <div className="flex justify-end gap-2 mt-6">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setEditingRuleIndex(null)
-              resetForm()
-            }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            className="bg-blue-600 text-white"
-            onClick={editingRuleIndex !== null ? handleUpdateRule : handleAddRule}
-            disabled={!validateRule().isValid}
-          >
-            {editingRuleIndex !== null ? 'Atualizar condicional' : 'Adicionar condicional'}
-          </Button>
         </div>
       </div>
-    </div>
+    </>
   )
 }

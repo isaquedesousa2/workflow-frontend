@@ -1,6 +1,3 @@
-import { FormComponent } from '../form/types'
-import { Node } from 'reactflow'
-
 export type Condition = {
   fieldId: string
   operator: 'equals' | 'notEquals' | 'contains' | 'notContains' | 'greaterThan' | 'lessThan'
@@ -27,6 +24,10 @@ export type ValidationRule = {
       value: any
     }
   }
+  elseActions?: {
+    action: 'show' | 'hide' | 'enable' | 'disable' | 'require' | 'optional'
+    fieldId: string
+  }[]
 }
 
 export type WorkflowValidation = {

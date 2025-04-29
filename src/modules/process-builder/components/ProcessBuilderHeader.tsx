@@ -1,7 +1,7 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Save, LayoutGrid, Workflow, Settings } from 'lucide-react'
+import { Save, LayoutGrid, Workflow, Settings, Plus } from 'lucide-react'
 import { useProcessBuilder } from '../contexts/ProcessBuilderContext'
 import { cn } from '@/lib/utils'
 
@@ -14,6 +14,8 @@ interface ProcessBuilderHeaderProps {
   activeTabForm: ActiveTabForm
   setActiveTabForm: (tab: ActiveTabForm) => void
   onSave?: () => void
+  openConditionalDialog: boolean
+  setOpenConditionalDialog: (open: boolean) => void
 }
 
 export const ProcessBuilderHeader = ({
@@ -22,6 +24,8 @@ export const ProcessBuilderHeader = ({
   activeTabForm,
   setActiveTabForm,
   onSave,
+  openConditionalDialog,
+  setOpenConditionalDialog,
 }: ProcessBuilderHeaderProps) => {
   const { name, setName } = useProcessBuilder()
 
@@ -116,6 +120,17 @@ export const ProcessBuilderHeader = ({
             >
               <LayoutGrid className="h-5 w-5" />
               Pré-visualização
+            </Button>
+          </div>
+        )}
+        {activeTab === 'settings' && (
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setOpenConditionalDialog(true)}
+              className="bg-purple-600 text-white w-full rounded-sm"
+            >
+              <Plus className="h-4 w-4" />
+              Adicionar condicional
             </Button>
           </div>
         )}
