@@ -56,7 +56,7 @@ const ProcessBuilderPageContent = ({
 }) => {
   const { nodes, edges, processName } = useWorkflowBuilder()
   const { rows, formName } = useFormBuilder()
-  const { state: validationState } = useFormValidation()
+  const { rules } = useFormValidation()
   const handleSave = () => {
     const data = {
       workflow: {
@@ -68,7 +68,7 @@ const ProcessBuilderPageContent = ({
         name: formName,
         rows,
       },
-      validations: validationState.validations,
+      rules,
     }
     console.log('JSON para salvar:', data)
     alert('JSON gerado! Veja o console.')
