@@ -1,8 +1,20 @@
 import { ProcessBuilderPage } from '@/modules/process-builder/page/ProcessBuilderPage'
 import { ProcessBuilderProvider } from '@/modules/process-builder/contexts/ProcessBuilderContext'
-export default function CriacaoProcessoPage() {
+import { processBuilderService } from '@/services/process-builder/process-builder.service'
+
+const getNodesTypes = async () => {
+  'use server'
+  const nodesTypes = await processBuilderService.getNodesTypes()
+  return nodesTypes
+}
+
+export default async function CriacaoProcessoPage() {
+  const nodesTypes = await getNodesTypes()
+
+  console.log('nodesTypes', nodesTypes)
+
   return (
-    <ProcessBuilderProvider>
+    <ProcessBuilderProvider nodesTypes={nodesTypes}>
       <ProcessBuilderPage />
     </ProcessBuilderProvider>
   )

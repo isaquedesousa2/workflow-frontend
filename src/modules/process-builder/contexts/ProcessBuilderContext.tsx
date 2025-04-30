@@ -12,12 +12,14 @@ interface ProcessBuilderContextType {
   setWorkflowNodes: (nodes: Node[]) => void
   setWorkflowEdges: (edges: Edge[]) => void
   setFormComponents: (components: FormComponent[]) => void
+  nodesTypes: []
 }
 
 const ProcessBuilderContext = createContext<ProcessBuilderContextType | undefined>(undefined)
 
 interface ProcessBuilderProviderProps {
   children: ReactNode
+  nodesTypes: []
   initialData?: {
     workflowNodes?: Node[]
     workflowEdges?: Edge[]
@@ -25,7 +27,11 @@ interface ProcessBuilderProviderProps {
   }
 }
 
-export const ProcessBuilderProvider = ({ children, initialData }: ProcessBuilderProviderProps) => {
+export const ProcessBuilderProvider = ({
+  children,
+  initialData,
+  nodesTypes,
+}: ProcessBuilderProviderProps) => {
   const [name, setName] = useState('')
   const [workflowNodes, setWorkflowNodes] = useState<Node[]>(initialData?.workflowNodes || [])
   const [workflowEdges, setWorkflowEdges] = useState<Edge[]>(initialData?.workflowEdges || [])
@@ -44,6 +50,7 @@ export const ProcessBuilderProvider = ({ children, initialData }: ProcessBuilder
         setWorkflowNodes,
         setWorkflowEdges,
         setFormComponents,
+        nodesTypes: nodesTypes || [],
       }}
     >
       {children}

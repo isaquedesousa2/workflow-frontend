@@ -3,7 +3,7 @@
 import { FC } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { NodeTypes } from '@/modules/process-builder/workflow/types'
+import { NodeTypes } from '@/modules/process-builder/features/workflow/types'
 
 interface NodeSelectionModalProps {
   isOpen: boolean

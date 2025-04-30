@@ -8,25 +8,16 @@ import { CustomNode } from './nodes/base/CustomNode'
 import { NodeToolbar } from './NodeToolbar'
 import WorkflowConnection from './edges/WorkflowConnection'
 import { ActivityNode } from './nodes/actions/ActivityNode'
-import { WebhookNode } from './nodes/actions/WebhookNode'
 import { ManualTriggerNode } from './nodes/triggers/ManualTriggerNode'
-import { CronTriggerNode } from './nodes/triggers/CronTriggerNode'
-import { DecisionNode } from './nodes/DecisionNode'
-import { JoinNode } from './nodes/JoinNode'
-import { WorkflowTriggerNode } from './nodes/triggers/WorkflowTriggerNode'
 import { NodeSettingsModal } from './nodes/NodeSettingsModal'
 import { Background, Controls, Panel } from 'reactflow'
 import { toast } from 'sonner'
+import { EndNode } from './nodes/EndNode'
 
 const nodeTypes = {
-  customNode: CustomNode,
   manualTriggerNode: ManualTriggerNode,
-  cronTriggerNode: CronTriggerNode,
-  workflowTriggerNode: WorkflowTriggerNode,
   activityNode: ActivityNode,
-  webhookNode: WebhookNode,
-  decisionNode: DecisionNode,
-  joinNode: JoinNode,
+  endNode: EndNode,
 }
 
 const edgeTypes = {
