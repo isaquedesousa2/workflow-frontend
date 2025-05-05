@@ -4,7 +4,7 @@ import { FC, memo, useEffect, useState } from 'react'
 import ReactFlow, { Edge, DefaultEdgeOptions, Node, ConnectionMode } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { useWorkflowBuilder } from '../contexts/WorkflowBuilderContext'
-import { CustomNode } from './nodes/base/CustomNode'
+import { CustomNode } from './nodes/base/CustomNode'  
 import { NodeToolbar } from './NodeToolbar'
 import WorkflowConnection from './edges/WorkflowConnection'
 import { ActivityNode } from './nodes/actions/ActivityNode'
@@ -13,11 +13,14 @@ import { NodeSettingsModal } from './nodes/NodeSettingsModal'
 import { Background, Controls, Panel } from 'reactflow'
 import { toast } from 'sonner'
 import { EndNode } from './nodes/EndNode'
-
+import { DecisionNode } from './nodes/DecisionNode'
+import { JoinNode } from './nodes/JoinNode'
 const nodeTypes = {
   manualTriggerNode: ManualTriggerNode,
   activityNode: ActivityNode,
   endNode: EndNode,
+  decisionNode: DecisionNode,
+  joinNode: JoinNode,
 }
 
 const edgeTypes = {

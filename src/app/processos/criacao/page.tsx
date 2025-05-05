@@ -11,8 +11,6 @@ const getNodesTypes = async () => {
 export default async function CriacaoProcessoPage() {
   const nodesTypes = await getNodesTypes()
 
-  console.log('nodesTypes', nodesTypes)
-
   return (
     <ProcessBuilderProvider nodesTypes={nodesTypes}>
       <ProcessBuilderPage />

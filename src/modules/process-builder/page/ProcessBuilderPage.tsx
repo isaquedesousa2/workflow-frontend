@@ -9,7 +9,10 @@ import {
   useFormBuilder,
 } from '@/modules/process-builder/features/form/contexts/FormBuilderContext'
 import { ReactFlowProvider } from '@xyflow/react'
-import { NodeSettingsProvider } from '../features/workflow/contexts/NodeSettingsContext'
+import {
+  NodeSettingsProvider,
+  useNodeConfig,
+} from '../features/workflow/contexts/NodeConfigContext'
 import {
   WorkflowBuilderProvider,
   useWorkflowBuilder,
@@ -25,6 +28,7 @@ import {
   FormValidationProvider,
   useFormValidation,
 } from '@/modules/process-builder/features/form-validation/contexts/FormValidationContext'
+import { criarProcessoAction } from '@/app/processos/criacao/actions'
 
 type ActiveTab = 'flow' | 'form' | 'rules'
 
@@ -55,23 +59,76 @@ const ProcessBuilderPageContent = ({
   setOpenConditionalDialog: (open: boolean) => void
 }) => {
   const { nodes, edges, processName } = useWorkflowBuilder()
+  const { settings } = useNodeConfig()
   const { rows, formName } = useFormBuilder()
   const { state: validationState } = useFormValidation()
-  const handleSave = () => {
-    const data = {
-      workflow: {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+
+  const handleSave = async () => {
+    setLoading(true)
+    setError(null)
+    setSuccess(false)
+
+    const getConnections = (nodeId: string, type: 'source' | 'target') =>
+      edges
+        .filter((edge) => (type === 'source' ? edge.source === nodeId : edge.target === nodeId))
+        .map((edge) => (type === 'source' ? edge.target : edge.source))
+
+    const payload = {
+      name: processName,
+      description: '',
+      flow: {
         name: processName,
-        nodes,
-        edges,
+        description: '',
+        nodes: nodes.map((node) => ({
+          name: node.data?.label || '',
+          description: node.data?.description || '',
+          positionX: node.position.x,
+          positionY: node.position.y,
+          type: node.type,
+          settings: settings[node.id].settings,
+          connectionSource:
+            getConnections(node.id, 'source').length > 0
+              ? getConnections(node.id, 'source')[0]
+              : null,
+          connectionTarget:
+            getConnections(node.id, 'target').length > 0
+              ? getConnections(node.id, 'target')[0]
+              : null,
+        })),
       },
       form: {
-        name: formName,
-        rows,
+        name: formName || 'TESTE',
+        metadata: {},
       },
-      validations: validationState.validations,
+      rules: validationState.validations.flatMap((v) =>
+        v.rules.map((rule) => ({
+          action: rule.action,
+          metadata: {},
+        })),
+      ),
     }
-    console.log('JSON para salvar:', data)
-    alert('JSON gerado! Veja o console.')
+
+    console.log(payload)
+    // try {
+    //   const result = await criarProcessoAction(payload)
+
+    //   console.log(result)
+    //   if (result.success) {
+    //     setSuccess(true)
+    //     alert('Processo criado com sucesso!')
+    //   } else {
+    //     setError(result.error || 'Erro desconhecido')
+    //     alert('Erro ao criar processo: ' + (result.error || 'Erro desconhecido'))
+    //   }
+    // } catch (err: any) {
+    //   setError(err.message || 'Erro desconhecido')
+    //   alert('Erro ao criar processo: ' + (err.message || 'Erro desconhecido'))
+    // } finally {
+    //   setLoading(false)
+    // }
   }
 
   return (

@@ -1,51 +1,31 @@
 import { FC, useEffect, useState } from 'react'
-import { useNodeSettings } from '../../../contexts/NodeSettingsContext'
+import { useNodeConfig } from '../../../contexts/NodeConfigContext'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select } from '@/components/Select'
-import { ActivityNodeConfig } from '@/modules/process-builder/workflow/types/node-settings'
+import { ActivityNodeConfig } from '../../../types/node-settings'
 
 interface ActivitySettingsProps {
   nodeId: string
   onValidationChange?: (isValid: boolean) => void
 }
 
-type AssigneeType = 'USER' | 'GROUP' | 'SPECIFIC_GROUP' | 'NONE'
-type Priority = 'LOW' | 'MEDIUM' | 'HIGH'
-
 export const ActivitySettings: FC<ActivitySettingsProps> = ({ nodeId, onValidationChange }) => {
-  const { getNodeSettings, updateNodeSettings } = useNodeSettings()
-  const nodeSettings = getNodeSettings<ActivityNodeConfig>(nodeId)
+  const { getNodeConfig, updateNodeConfig } = useNodeConfig()
+  const nodeConfig = getNodeConfig<ActivityNodeConfig>(nodeId)
   const [isValid, setIsValid] = useState(false)
 
-  const [settings, setSettings] = useState({
-    label: nodeSettings?.settings?.label || '',
-    description: nodeSettings?.settings?.description || '',
-    assigneeType: (nodeSettings?.settings?.assigneeType as AssigneeType) || 'NONE',
-    specificGroupId: nodeSettings?.settings?.specificGroupId || {
-      value: '',
-      label: 'Selecione o grupo',
-    },
-    specificUserId: nodeSettings?.settings?.specificUserId || {
-      value: '',
-      label: 'Selecione o usuário',
-    },
-  })
-
   useEffect(() => {
-    const newIsValid = Boolean(settings.label.trim())
+    const newIsValid = Boolean(nodeConfig?.label.trim())
     setIsValid(newIsValid)
     onValidationChange?.(newIsValid)
-  }, [settings, onValidationChange])
+  }, [nodeConfig, onValidationChange])
 
-  const handleChange = (field: keyof typeof settings, value: any) => {
-    const newSettings = { ...settings, [field]: value }
-    setSettings(newSettings)
-
-    updateNodeSettings(nodeId, {
-      ...nodeSettings,
-      settings: newSettings,
+  const handleChange = (field: string, value: any) => {
+    updateNodeConfig(nodeId, {
+      ...nodeConfig,
+      [field]: value,
     })
   }
 
@@ -59,11 +39,11 @@ export const ActivitySettings: FC<ActivitySettingsProps> = ({ nodeId, onValidati
           id="label"
           type="text"
           placeholder="Ex: Revisar Documento"
-          value={settings.label}
+          value={nodeConfig?.label}
           onChange={(e) => handleChange('label', e.target.value)}
           className="w-full"
         />
-        {!settings.label.trim() && (
+        {!nodeConfig?.label.trim() && (
           <p className="text-xs text-red-500 mt-1">O nome da atividade é obrigatório</p>
         )}
       </div>
@@ -75,7 +55,7 @@ export const ActivitySettings: FC<ActivitySettingsProps> = ({ nodeId, onValidati
         <Textarea
           id="description"
           placeholder="Descreva a atividade..."
-          value={settings.description}
+          value={nodeConfig?.description}
           onChange={(e) => handleChange('description', e.target.value)}
           className="w-full"
           rows={3}
@@ -106,12 +86,12 @@ export const ActivitySettings: FC<ActivitySettingsProps> = ({ nodeId, onValidati
               value: 'SPECIFIC_GROUP',
             },
           ]}
-          defaultOption={settings.assigneeType}
+          defaultOption={nodeConfig?.assigneeType}
           onValueChange={(value) => handleChange('assigneeType', value)}
         />
       </div>
 
-      {settings.assigneeType === 'USER' && (
+      {nodeConfig?.assigneeType === 'USER' && (
         <Select
           title="Usuário"
           options={[
@@ -123,12 +103,12 @@ export const ActivitySettings: FC<ActivitySettingsProps> = ({ nodeId, onValidati
               },
             },
           ]}
-          defaultOption={settings.specificUserId?.label || 'Selecione o usuário'}
+          defaultOption={nodeConfig?.specificUserId?.label || 'Selecione o usuário'}
           onValueChange={(value) => handleChange('specificUserId', value)}
         />
       )}
 
-      {settings.assigneeType === 'GROUP' && (
+      {nodeConfig?.assigneeType === 'GROUP' && (
         <Select
           title="Grupo"
           options={[
@@ -140,12 +120,12 @@ export const ActivitySettings: FC<ActivitySettingsProps> = ({ nodeId, onValidati
               },
             },
           ]}
-          defaultOption={settings.specificGroupId?.label || 'Selecione o grupo'}
+          defaultOption={nodeConfig?.specificGroupId?.label || 'Selecione o grupo'}
           onValueChange={(value) => handleChange('specificGroupId', value)}
         />
       )}
 
-      {settings.assigneeType === 'SPECIFIC_GROUP' && (
+      {nodeConfig?.assigneeType === 'SPECIFIC_GROUP' && (
         <Select
           title="Grupo"
           options={[
@@ -157,7 +137,7 @@ export const ActivitySettings: FC<ActivitySettingsProps> = ({ nodeId, onValidati
               },
             },
           ]}
-          defaultOption={settings.specificGroupId?.label || 'Selecione o grupo'}
+          defaultOption={nodeConfig?.specificGroupId?.label || 'Selecione o grupo'}
           onValueChange={(value) => handleChange('specificGroupId', value)}
         />
       )}

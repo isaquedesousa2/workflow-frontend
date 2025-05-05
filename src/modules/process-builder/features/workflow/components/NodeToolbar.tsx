@@ -1,15 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { FC, useState } from 'react'
 import { Plus } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useProcessBuilder } from '@/modules/process-builder/contexts/ProcessBuilderContext'
+import { DecisionNode } from '@/modules/process-builder/features/workflow/components/nodes/DecisionNode'
+import { JoinNode } from '@/modules/process-builder/features/workflow/components/nodes/JoinNode'
+import ActivityNode from '@/modules/process-builder/features/workflow/components/nodes/actions/ActivityNode'
+import { ManualTriggerNode } from '@/modules/process-builder/features/workflow/components/nodes/triggers/ManualTriggerNode'
 
 interface NodeOption {
   type: string
   label: string
   icon: string
   description: string
+  component: FC<any>
   initialData?: {
     type?: string
     description?: string
@@ -44,17 +49,65 @@ const labelMap: Record<string, string> = {
   TRIGGER: 'Triggers',
 }
 
+const nodeCategories: NodeCategory[] = [
+  {
+    label: 'Triggers',
+    icon: '⚡',
+    nodes: [
+      {
+        type: 'manualTriggerNode',
+        label: 'Disparo manual',
+        icon: '⚡',
+        description: 'Inicia o workflow quando um usuário aciona manualmente o processo',
+        component: ManualTriggerNode,
+      },
+    ],
+  },
+  {
+    label: 'Ações',
+    icon: '🎯',
+    nodes: [
+      {
+        type: 'activityNode',
+        label: 'Atividade',
+        icon: '📝',
+        description: 'Tarefa ou atividade a ser executada',
+        component: ActivityNode,
+      },
+      // {
+      //   type: 'webhookNode',
+      //   label: 'Disparar Webhook',
+      //   icon: '🌐',
+      //   description: 'Dispara uma requisição HTTP para um endpoint',
+      //   component: WebhookNode,
+      // },
+    ],
+  },
+  {
+    label: 'Controle de Fluxo',
+    icon: '🔄',
+    nodes: [
+      {
+        type: 'decisionNode',
+        label: 'Decisão',
+        icon: '🔍',
+        description: 'Decisão entre duas opções',
+        component: DecisionNode,
+      },
+      {
+        type: 'joinNode',
+        label: 'Junção',
+        icon: '🔗',
+        description: 'Ponto de junção para sincronizar múltiplos fluxos',
+        component: JoinNode,
+      },
+    ],
+  },
+]
+
 export const NodeToolbar = () => {
   const [isOpen, setIsOpen] = useState(false)
   const { nodesTypes: nodesTypesRaw } = useProcessBuilder()
-
-  const nodesTypes: NodeCategory[] = Object.entries(nodesTypesRaw || {}).map(
-    ([category, nodes]) => ({
-      label: labelMap[category] || category,
-      icon: iconMap[category] || '🔧',
-      nodes: Array.isArray(nodes) ? nodes : [],
-    }),
-  )
 
   const onDragStart = (event: React.DragEvent, nodeData: NodeOption) => {
     const { type, label, icon, description, initialData } = nodeData
@@ -97,7 +150,7 @@ export const NodeToolbar = () => {
           </div>
 
           <div className="p-4 space-y-6 max-h-[60vh] overflow-y-auto bg-white">
-            {nodesTypes.map((category) => (
+            {nodeCategories.map((category) => (
               <div key={category?.label} className="space-y-3">
                 <div className="flex items-center gap-2 text-gray-700 font-medium">
                   <span className="text-lg">{category?.icon}</span>

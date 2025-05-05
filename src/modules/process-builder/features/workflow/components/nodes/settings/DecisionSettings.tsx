@@ -1,10 +1,11 @@
 import { FC, useEffect, useState } from 'react'
-import { useNodeSettings } from '../../../contexts/NodeSettingsContext'
+import { useNodeConfig } from '../../../contexts/NodeConfigContext'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select } from '@/components/Select'
-import { DecisionNodeConfig } from '@/modules/process-builder/workflow/types/node-settings'
+import { DecisionNodeConfig } from '../../../types/node-settings'
+import { Button } from '@/components/ui/button'
 
 interface DecisionSettingsProps {
   nodeId: string
@@ -38,67 +39,73 @@ const COMPARISON_TYPES = [
 ]
 
 export const DecisionSettings: FC<DecisionSettingsProps> = ({ nodeId, onValidationChange }) => {
-  const { getNodeSettings, updateNodeSettings } = useNodeSettings()
-  const nodeSettings = getNodeSettings<DecisionNodeConfig>(nodeId)
+  const { getNodeConfig, updateNodeConfig } = useNodeConfig()
+  const nodeConfig = getNodeConfig<DecisionNodeConfig>(nodeId)
   const [isValid, setIsValid] = useState(false)
 
-  const [settings, setSettings] = useState({
-    label: nodeSettings?.settings?.label || '',
-    description: nodeSettings?.settings?.description || '',
-    formField: nodeSettings?.settings?.formField || {
-      id: '',
-      label: '',
-    },
-    operator: nodeSettings?.settings?.operator || '==',
-    comparisonType: nodeSettings?.settings?.comparisonType || 'value',
-    comparisonValue: nodeSettings?.settings?.comparisonValue || '',
-    comparisonField: nodeSettings?.settings?.comparisonField || {
-      id: '',
-      label: '',
-    },
+  // Grupos de regras para SIM e NÃO
+  const emptyRule = {
+    formField: { id: '', label: '' },
+    operator: '==',
+    comparisonType: 'value',
+    comparisonValue: '',
+    comparisonField: { id: '', label: '' },
+  }
+
+  const fixRule = (rule: any) => ({
+    ...rule,
+    comparisonValue: rule.comparisonValue ?? '',
+    comparisonField: rule.comparisonField ?? { id: '', label: '' },
   })
+  const [rulesYes, setRulesYes] = useState<Array<typeof emptyRule>>(
+    nodeConfig?.rulesYes && Array.isArray(nodeConfig.rulesYes)
+      ? nodeConfig.rulesYes.map(fixRule)
+      : [],
+  )
+  const [rulesNo, setRulesNo] = useState<Array<typeof emptyRule>>(
+    nodeConfig?.rulesNo && Array.isArray(nodeConfig.rulesNo) ? nodeConfig.rulesNo.map(fixRule) : [],
+  )
 
   useEffect(() => {
-    const newIsValid = Boolean(
-      settings.label.trim() &&
-        settings.formField.id &&
-        settings.operator &&
-        (settings.comparisonType === 'value'
-          ? settings.comparisonValue.trim()
-          : settings.comparisonField.id),
-    )
+    const isValidRule = (r: any) => r && r.formField && r.operator && r.comparisonType
+    const filteredYes = rulesYes.filter(isValidRule)
+    const filteredNo = rulesNo.filter(isValidRule)
+    const newIsValid = Boolean(filteredYes.length > 0 && filteredNo.length > 0)
     setIsValid(newIsValid)
     onValidationChange?.(newIsValid)
-  }, [settings, onValidationChange])
-
-  const handleChange = (field: keyof typeof settings, value: any) => {
-    const newSettings = { ...settings, [field]: value }
-    setSettings(newSettings)
-
-    updateNodeSettings(nodeId, {
-      ...nodeSettings,
-      settings: newSettings,
+    // Salva as configurações e regras no node
+    updateNodeConfig(nodeId, {
+      ...nodeConfig,
+      label: nodeConfig?.label || '',
+      description: nodeConfig?.description || '',
+      rulesYes: rulesYes,
+      rulesNo: rulesNo,
     })
+  }, [nodeConfig?.label, nodeConfig?.description, rulesYes, rulesNo, onValidationChange])
+
+  const addRuleYes = () => setRulesYes([...rulesYes, { ...emptyRule }])
+  const updateRuleYes = (idx: number, rule: typeof emptyRule) => {
+    const updated = [...rulesYes]
+    updated[idx] = rule
+    setRulesYes(updated)
+  }
+  const removeRuleYes = (idx: number) => {
+    const updated = [...rulesYes]
+    updated.splice(idx, 1)
+    setRulesYes(updated)
   }
 
-  const handleFormFieldChange = (value: string) => {
-    const selectedField = FORM_FIELDS.find((field) => field.id === value)
-    if (selectedField) {
-      handleChange('formField', {
-        id: selectedField.id,
-        label: selectedField.label,
-      })
-    }
+  // Funções para regras NÃO
+  const addRuleNo = () => setRulesNo([...rulesNo, { ...emptyRule }])
+  const updateRuleNo = (idx: number, rule: typeof emptyRule) => {
+    const updated = [...rulesNo]
+    updated[idx] = rule
+    setRulesNo(updated)
   }
-
-  const handleComparisonFieldChange = (value: string) => {
-    const selectedField = FORM_FIELDS.find((field) => field.id === value)
-    if (selectedField) {
-      handleChange('comparisonField', {
-        id: selectedField.id,
-        label: selectedField.label,
-      })
-    }
+  const removeRuleNo = (idx: number) => {
+    const updated = [...rulesNo]
+    updated.splice(idx, 1)
+    setRulesNo(updated)
   }
 
   return (
@@ -111,11 +118,11 @@ export const DecisionSettings: FC<DecisionSettingsProps> = ({ nodeId, onValidati
           id="label"
           type="text"
           placeholder="Ex: Aprovar Documento"
-          value={settings.label}
-          onChange={(e) => handleChange('label', e.target.value)}
+          value={nodeConfig?.label || ''}
+          onChange={(e) => updateNodeConfig(nodeId, { ...nodeConfig, label: e.target.value })}
           className="w-full"
         />
-        {!settings.label.trim() && (
+        {!nodeConfig?.label?.trim() && (
           <p className="text-xs text-red-500 mt-1">O nome da decisão é obrigatório</p>
         )}
       </div>
@@ -127,82 +134,150 @@ export const DecisionSettings: FC<DecisionSettingsProps> = ({ nodeId, onValidati
         <Textarea
           id="description"
           placeholder="Descreva a decisão..."
-          value={settings.description}
-          onChange={(e) => handleChange('description', e.target.value)}
+          value={nodeConfig?.description || ''}
+          onChange={(e) => updateNodeConfig(nodeId, { ...nodeConfig, description: e.target.value })}
           className="w-full"
           rows={3}
         />
       </div>
 
       <div>
-        <Label className="block text-sm font-medium text-gray-700 mb-1">Campo do Formulário</Label>
-        <Select
-          options={FORM_FIELDS}
-          value={settings.formField.id}
-          onValueChange={handleFormFieldChange}
-          placeholder="Selecione um campo"
-          title="Campo do Formulário"
-        />
-        {!settings.formField.id && (
-          <p className="text-xs text-red-500 mt-1">O campo do formulário é obrigatório</p>
-        )}
+        <Label className="block text-sm font-medium text-gray-700 mb-1">Regras para o SIM</Label>
+        {rulesYes.map((rule, idx) => (
+          <div key={idx} className="flex items-center gap-2 mb-4">
+            <div className="grid grid-cols-4 gap-2 items-center border p-2 rounded-md bg-gray-50">
+              <Select
+                options={FORM_FIELDS}
+                value={rule.formField.id}
+                onValueChange={(value) => {
+                  const selected = FORM_FIELDS.find((f) => f.id === value)
+                  updateRuleYes(idx, { ...rule, formField: selected || { id: '', label: '' } })
+                }}
+                placeholder="Campo do formulário"
+                title="Campo do formulário"
+                className="col-span-1"
+              />
+              <Select
+                options={OPERATORS}
+                value={rule.operator}
+                onValueChange={(value) => updateRuleYes(idx, { ...rule, operator: value })}
+                placeholder="Operador"
+                title="Operador"
+                className="col-span-1"
+              />
+              <Select
+                options={COMPARISON_TYPES}
+                value={rule.comparisonType}
+                onValueChange={(value) => updateRuleYes(idx, { ...rule, comparisonType: value })}
+                placeholder="Tipo de comparação"
+                title="Tipo de comparação"
+                className="col-span-1"
+              />
+              {rule.comparisonType === 'value' ? (
+                <Input
+                  value={rule.comparisonValue}
+                  onChange={(e) => updateRuleYes(idx, { ...rule, comparisonValue: e.target.value })}
+                  placeholder="Valor de comparação"
+                  className="col-span-1"
+                />
+              ) : (
+                <Select
+                  options={FORM_FIELDS}
+                  value={rule.comparisonField?.id || ''}
+                  onValueChange={(value) => {
+                    const selected = FORM_FIELDS.find((f) => f.id === value)
+                    updateRuleYes(idx, {
+                      ...rule,
+                      comparisonField: selected || { id: '', label: '' },
+                    })
+                  }}
+                  placeholder="Campo de comparação"
+                  title="Campo de comparação"
+                  className="col-span-1"
+                />
+              )}
+            </div>
+            <Button variant="destructive" size="icon" onClick={() => removeRuleYes(idx)}>
+              -
+            </Button>
+          </div>
+        ))}
+        <Button variant="secondary" onClick={addRuleYes}>
+          Adicionar regra SIM
+        </Button>
       </div>
 
+      {/* Grupos de regras para NÃO */}
       <div>
-        <Label className="block text-sm font-medium text-gray-700 mb-1">Operador</Label>
-        <Select
-          options={OPERATORS}
-          value={settings.operator}
-          onValueChange={(value) => handleChange('operator', value)}
-          placeholder="Selecione um operador"
-          title="Operador"
-        />
+        <Label className="block text-sm font-medium text-gray-700 mb-1">Regras para o NÃO</Label>
+        {rulesNo.map((rule, idx) => (
+          <div key={idx} className="flex items-center gap-2 mb-4">
+            <div className="grid grid-cols-4 gap-2 items-center border p-2 rounded-md bg-gray-50">
+              <Select
+                options={FORM_FIELDS}
+                value={rule.formField.id}
+                onValueChange={(value) => {
+                  const selected = FORM_FIELDS.find((f) => f.id === value)
+                  updateRuleNo(idx, { ...rule, formField: selected || { id: '', label: '' } })
+                }}
+                placeholder="Campo do formulário"
+                title="Campo do formulário"
+                className="col-span-1"
+              />
+              <Select
+                options={OPERATORS}
+                value={rule.operator}
+                onValueChange={(value) => updateRuleNo(idx, { ...rule, operator: value })}
+                placeholder="Operador"
+                title="Operador"
+                className="col-span-1"
+              />
+              <Select
+                options={COMPARISON_TYPES}
+                value={rule.comparisonType}
+                onValueChange={(value) => updateRuleNo(idx, { ...rule, comparisonType: value })}
+                placeholder="Tipo de comparação"
+                title="Tipo de comparação"
+                className="col-span-1"
+              />
+              {rule.comparisonType === 'value' ? (
+                <Input
+                  value={rule.comparisonValue}
+                  onChange={(e) => updateRuleNo(idx, { ...rule, comparisonValue: e.target.value })}
+                  placeholder="Valor de comparação"
+                  className="col-span-1"
+                />
+              ) : (
+                <Select
+                  options={FORM_FIELDS}
+                  value={rule.comparisonField?.id || ''}
+                  onValueChange={(value) => {
+                    const selected = FORM_FIELDS.find((f) => f.id === value)
+                    updateRuleNo(idx, {
+                      ...rule,
+                      comparisonField: selected || { id: '', label: '' },
+                    })
+                  }}
+                  placeholder="Campo de comparação"
+                  title="Campo de comparação"
+                  className="col-span-1"
+                />
+              )}
+            </div>
+            <Button
+              variant="destructive"
+              size="icon"
+              onClick={() => removeRuleNo(idx)}
+              className="col-span-1 justify-self-end"
+            >
+              -
+            </Button>
+          </div>
+        ))}
+        <Button variant="secondary" onClick={addRuleNo}>
+          Adicionar regra NÃO
+        </Button>
       </div>
-
-      <div>
-        <Label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Comparação</Label>
-        <Select
-          options={COMPARISON_TYPES}
-          value={settings.comparisonType}
-          onValueChange={(value) => handleChange('comparisonType', value)}
-          placeholder="Selecione o tipo de comparação"
-          title="Tipo de Comparação"
-        />
-      </div>
-
-      {settings.comparisonType === 'value' ? (
-        <div>
-          <Label className="block text-sm font-medium text-gray-700 mb-1">
-            Valor de Comparação
-          </Label>
-          <Input
-            type="text"
-            placeholder="Digite o valor"
-            value={settings.comparisonValue}
-            onChange={(e) => handleChange('comparisonValue', e.target.value)}
-            className="w-full"
-          />
-          {!settings.comparisonValue.trim() && (
-            <p className="text-xs text-red-500 mt-1">O valor de comparação é obrigatório</p>
-          )}
-        </div>
-      ) : (
-        <div>
-          <Label className="block text-sm font-medium text-gray-700 mb-1">
-            Campo de Comparação
-          </Label>
-          <Select
-            options={FORM_FIELDS}
-            value={settings.comparisonField.id}
-            onValueChange={handleComparisonFieldChange}
-            placeholder="Selecione um campo"
-            title="Campo de Comparação"
-          />
-          {!settings.comparisonField.id && (
-            <p className="text-xs text-red-500 mt-1">O campo de comparação é obrigatório</p>
-          )}
-        </div>
-      )}
     </div>
   )
 }

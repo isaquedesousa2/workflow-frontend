@@ -22,7 +22,7 @@ import {
   applyEdgeChanges,
   ReactFlowInstance,
 } from 'reactflow'
-import { useNodeSettings } from './NodeSettingsContext'
+import { useNodeConfig } from './NodeConfigContext'
 
 interface WorkflowBuilderContextData {
   nodes: Node[]
@@ -63,7 +63,7 @@ export const WorkflowBuilderProvider: FC<WorkflowBuilderProviderProps> = ({ chil
   const [processName, setProcessName] = useState('Novo Processo')
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)
   const reactFlowWrapper = useRef<HTMLDivElement | null>(null)
-  const { createNodeSettings } = useNodeSettings()
+  const { createNodeConfig } = useNodeConfig()
 
   const removeEdge = (edgeId: string) => {
     setEdges((prev) => prev.filter((edge) => edge.id !== edgeId))
@@ -124,27 +124,25 @@ export const WorkflowBuilderProvider: FC<WorkflowBuilderProviderProps> = ({ chil
         },
       }
 
-      createNodeSettings(nodeId, {
+      createNodeConfig(nodeId, {
         position: { x: 0, y: 0 },
         id: nodeId,
         type: nodeData.type,
-        settings: {
-          label: nodeData.label,
-          description: nodeData.description || '',
-          ...(nodeData.type === 'manualTriggerNode' && {
-            mechanism: 'NONE',
-            specificGroupId: '',
-          }),
-          ...(nodeData.type === 'cronTriggerNode' && {
-            intervalType: 'DAILY',
-            schedule: '0 9 * * *',
-          }),
-        },
+        label: nodeData.label,
+        description: nodeData.description || '',
+        ...(nodeData.type === 'manualTriggerNode' && {
+          mechanism: 'NONE',
+          specificGroupId: '',
+        }),
+        ...(nodeData.type === 'cronTriggerNode' && {
+          intervalType: 'DAILY',
+          schedule: '0 9 * * *',
+        }),
       })
 
       setNodes((nds: Node[]) => nds.concat(newNode))
     },
-    [reactFlowInstance, setNodes, setEdges, createNodeSettings],
+    [reactFlowInstance, setNodes, setEdges, createNodeConfig],
   )
 
   const onDragOver = useCallback((event: React.DragEvent) => {

@@ -9,7 +9,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { useNodeSettings, NodeSettings } from '../../../contexts/NodeSettingsContext'
+import { useNodeConfig } from '../../../contexts/NodeConfigContext'
 
 interface CronTriggerSettingsProps {
   nodeId: string
@@ -65,9 +65,9 @@ export const CronTriggerSettings: FC<CronTriggerSettingsProps> = ({
   nodeId,
   onValidationChange,
 }) => {
-  const { getNodeSettings, updateNodeSettings } = useNodeSettings()
-  const nodeSettings = getNodeSettings(nodeId)
-  const schedule = nodeSettings?.data?.schedule || ''
+  const { getNodeConfig, updateNodeConfig } = useNodeConfig()
+  const nodeConfig = getNodeConfig(nodeId)
+  const schedule = nodeConfig?.data?.schedule || ''
 
   const [intervalType, setIntervalType] = useState<'DAILY' | 'WEEKLY' | 'CUSTOM'>('DAILY')
   const [selectedWeekdays, setSelectedWeekdays] = useState<string[]>([])
@@ -133,10 +133,10 @@ export const CronTriggerSettings: FC<CronTriggerSettingsProps> = ({
     }
 
     if (newSchedule) {
-      updateNodeSettings(nodeId, {
-        ...nodeSettings,
+      updateNodeConfig(nodeId, {
+        ...nodeConfig,
         data: {
-          ...nodeSettings?.data,
+          ...nodeConfig?.data,
           schedule: newSchedule,
         },
       })

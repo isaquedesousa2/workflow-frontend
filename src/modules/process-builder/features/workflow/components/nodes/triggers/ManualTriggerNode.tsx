@@ -1,9 +1,9 @@
 import { memo } from 'react'
 import { NodeProps } from 'reactflow'
 import { BaseNode } from '../base/BaseNode'
-import { useNodeSettings } from '../../../contexts/NodeSettingsContext'
+import { useNodeConfig } from '../../../contexts/NodeConfigContext'
 import { Input } from '@/components/ui/input'
-import { ManualTriggerNodeConfig } from '@/modules/process-builder/workflow/types/node-settings'
+import { ManualTriggerNodeConfig } from '../../../types/node-settings'
 
 interface ManualTriggerNodeData {
   label: string
@@ -21,18 +21,18 @@ const mechanismLabels = {
 
 export const ManualTriggerNode = memo(
   ({ data, selected, ...props }: NodeProps<ManualTriggerNodeData>) => {
-    const { getNodeSettings } = useNodeSettings()
-    const nodeSettings = getNodeSettings<ManualTriggerNodeConfig>(props.id)
+    const { getNodeConfig } = useNodeConfig()
+    const nodeConfig = getNodeConfig<ManualTriggerNodeConfig>(props.id)
 
     const assignee =
-      mechanismLabels[nodeSettings?.settings.mechanism as keyof typeof mechanismLabels]
+      mechanismLabels[nodeConfig?.mechanism as keyof typeof mechanismLabels]
 
     return (
       <BaseNode
         data={{
           ...data,
-          label: nodeSettings?.settings?.label || data.label,
-          description: nodeSettings?.settings?.description || data.description,
+          label: nodeConfig?.label || data.label,
+          description: nodeConfig?.description || data.description,
           validation: {
             validateHandlerTarget: false,
             validateHandlerSource: true,

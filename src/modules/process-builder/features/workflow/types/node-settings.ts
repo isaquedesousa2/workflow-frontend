@@ -1,6 +1,8 @@
 export interface BaseNodeConfig {
   id: string
   type: string
+  label: string
+  description?: string
   position: { x: number; y: number }
 }
 
@@ -11,42 +13,29 @@ interface BaseTriggerNodeConfig {
 
 export interface StartNodeConfig extends BaseNodeConfig {
   type: 'start'
-  data: {
-    label: string
-    description?: string
-  }
+  label: string
+  description?: string
 }
 
 export interface EndNodeConfig extends BaseNodeConfig {
   type: 'end'
-  data: {
-    label: string
-    description?: string
-    assignee: string
-  }
 }
 
 export interface ConditionNodeConfig extends BaseNodeConfig {
   type: 'condition'
-  settings: {
-    label: string
-    description?: string
-  }
 }
 
 export interface ManualTriggerNodeConfig extends BaseNodeConfig {
   type: 'manualTrigger'
-  settings: {
-    mechanism: 'USER' | 'GROUP' | 'SPECIFIC_GROUP' | 'NONE'
-    specificGroupId?: {
-      label: string
-      value: string
-    }
-    specificUserId?: {
-      label: string
-      value: string
-    }
-  } & BaseTriggerNodeConfig
+  mechanism: 'USER' | 'GROUP' | 'SPECIFIC_GROUP' | 'NONE'
+  specificGroupId?: {
+    label: string
+    value: string
+  }
+  specificUserId?: {
+    label: string
+    value: string
+  }
 }
 
 export interface CronTriggerNodeConfig extends BaseNodeConfig {
@@ -73,28 +62,20 @@ export interface ActionNodeConfig extends BaseNodeConfig {
 
 export interface ActivityNodeConfig extends BaseNodeConfig {
   type: 'activity'
-  settings: {
+  assigneeType: 'USER' | 'GROUP' | 'SPECIFIC_GROUP' | 'NONE'
+  specificGroupId?: {
     label: string
-    description?: string
-    assigneeType: 'USER' | 'GROUP' | 'SPECIFIC_GROUP' | 'NONE'
-    specificGroupId?: {
-      label: string
-      value: string
-    }
-    specificUserId?: {
-      label: string
-      value: string
-    }
-    dueDate?: string
-    priority?: 'LOW' | 'MEDIUM' | 'HIGH'
+    value: string
+  }
+  specificUserId?: {
+    label: string
+    value: string
   }
 }
 
 export interface DecisionNodeConfig extends BaseNodeConfig {
   type: 'decision'
-  settings: {
-    label: string
-    description?: string
+  rulesYes: Array<{
     formField: {
       id: string
       label: string
@@ -106,7 +87,20 @@ export interface DecisionNodeConfig extends BaseNodeConfig {
       id: string
       label: string
     }
-  }
+  }>
+  rulesNo: Array<{
+    formField: {
+      id: string
+      label: string
+    }
+    operator: '>' | '<' | '>=' | '<=' | '==' | '!=' | 'contains' | 'startsWith' | 'endsWith'
+    comparisonType: 'value' | 'field'
+    comparisonValue?: string
+    comparisonField?: {
+      id: string
+      label: string
+    }
+  }>
 }
 
 export type NodeConfig =

@@ -1,6 +1,6 @@
 'use client'
 import { FC, useEffect, useState, FormEvent } from 'react'
-import { useNodeSettings } from '../../../contexts/NodeSettingsContext'
+import { useNodeConfig } from '../../../contexts/NodeConfigContext'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -18,40 +18,22 @@ export const ManualTriggerSettings: FC<ManualTriggerSettingsProps> = ({
   nodeId,
   onValidationChange,
 }) => {
-  const { getNodeSettings, updateNodeSettings } = useNodeSettings()
-  const nodeSettings = getNodeSettings<ManualTriggerNodeConfig>(nodeId)
-  const [isValid, setIsValid] = useState(false)
-
-  const [settings, setSettings] = useState({
-    label: nodeSettings?.settings?.label || '',
-    description: nodeSettings?.settings?.description || '',
-    mechanism: (nodeSettings?.settings?.mechanism as TriggerMechanism) || 'NONE',
-    specificGroupId: nodeSettings?.settings?.specificGroupId || {
-      value: '',
-      label: 'Selecione o grupo',
-    },
-    specificUserId: nodeSettings?.settings?.specificUserId || {
-      value: '',
-      label: 'Selecione o usuário',
-    },
-  })
+  const { getNodeConfig, updateNodeConfig } = useNodeConfig()
+  const nodeConfig = getNodeConfig<ManualTriggerNodeConfig>(nodeId)
 
   useEffect(() => {
     const newIsValid = Boolean(
-      settings.label.trim() &&
-        (settings.mechanism !== 'SPECIFIC_GROUP' || String(settings.specificGroupId || '').trim()),
+      nodeConfig?.label.trim() &&
+        (nodeConfig?.mechanism !== 'SPECIFIC_GROUP' ||
+          String(nodeConfig?.specificGroupId || '').trim()),
     )
-    setIsValid(newIsValid)
     onValidationChange?.(newIsValid)
-  }, [settings, onValidationChange])
+  }, [nodeConfig, onValidationChange])
 
-  const handleChange = (field: keyof typeof settings, value: any) => {
-    const newSettings = { ...settings, [field]: value }
-    setSettings(newSettings)
-
-    updateNodeSettings(nodeId, {
-      ...nodeSettings,
-      settings: newSettings,
+  const handleChange = (field: string, value: any) => {
+    updateNodeConfig(nodeId, {
+      ...nodeConfig,
+      [field]: value,
     })
   }
 
@@ -65,11 +47,11 @@ export const ManualTriggerSettings: FC<ManualTriggerSettingsProps> = ({
           id="label"
           type="text"
           placeholder="Ex: Iniciar Processo de Vendas"
-          value={settings.label}
+          value={nodeConfig?.label}
           onChange={(e) => handleChange('label', e.target.value)}
           className="w-full"
         />
-        {!settings.label.trim() && (
+        {!nodeConfig?.label.trim() && (
           <p className="text-xs text-red-500 mt-1">O nome do trigger é obrigatório</p>
         )}
       </div>
@@ -81,7 +63,7 @@ export const ManualTriggerSettings: FC<ManualTriggerSettingsProps> = ({
         <Textarea
           id="description"
           placeholder="Descreva o propósito deste trigger..."
-          value={settings.description}
+          value={nodeConfig?.description}
           onChange={(e) => handleChange('description', e.target.value)}
           className="w-full"
           rows={3}
@@ -112,12 +94,12 @@ export const ManualTriggerSettings: FC<ManualTriggerSettingsProps> = ({
               value: 'SPECIFIC_GROUP',
             },
           ]}
-          defaultOption={settings.mechanism}
+          defaultOption={nodeConfig?.mechanism}
           onValueChange={(value) => handleChange('mechanism', value)}
         />
       </div>
 
-      {settings.mechanism === 'USER' && (
+      {nodeConfig?.mechanism === 'USER' && (
         <Select
           title="Usuário"
           options={[
@@ -129,11 +111,11 @@ export const ManualTriggerSettings: FC<ManualTriggerSettingsProps> = ({
               },
             },
           ]}
-          defaultOption={settings.specificUserId?.label || 'Selecione o usuário'}
+          defaultOption={nodeConfig?.specificUserId?.label || 'Selecione o usuário'}
           onValueChange={(value) => handleChange('specificUserId', value)}
         />
       )}
-      {settings.mechanism === 'GROUP' && (
+      {nodeConfig?.mechanism === 'GROUP' && (
         <Select
           title="Grupo"
           options={[
@@ -145,11 +127,11 @@ export const ManualTriggerSettings: FC<ManualTriggerSettingsProps> = ({
               },
             },
           ]}
-          defaultOption={String(settings.specificGroupId.label)}
+          defaultOption={String(nodeConfig?.specificGroupId?.label)}
           onValueChange={(value) => handleChange('specificGroupId', value)}
         />
       )}
-      {settings.mechanism === 'SPECIFIC_GROUP' && (
+      {nodeConfig?.mechanism === 'SPECIFIC_GROUP' && (
         <Select
           title="Grupo"
           options={[
@@ -161,7 +143,7 @@ export const ManualTriggerSettings: FC<ManualTriggerSettingsProps> = ({
               },
             },
           ]}
-          defaultOption={String(settings.specificGroupId.label)}
+          defaultOption={String(nodeConfig?.specificGroupId?.label)}
           onValueChange={(value) => handleChange('specificGroupId', value)}
         />
       )}

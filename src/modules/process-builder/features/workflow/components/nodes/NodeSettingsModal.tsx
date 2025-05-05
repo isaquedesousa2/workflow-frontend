@@ -1,5 +1,5 @@
 import { FC, useState } from 'react'
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Node } from 'reactflow'
 import { Button } from '@/components/ui/button'
 import { ActivitySettings, CronTriggerSettings } from './settings'
@@ -60,15 +60,20 @@ export const NodeSettingsModal: FC<NodeSettingsModalProps> = ({ isOpen, onClose,
   }
 
   return (
-    <Drawer open={isOpen} onOpenChange={handleClose} direction="right">
-      <DrawerContent className="w-[400px] my-4 rounded-l-sm">
-        <DrawerHeader>
-          <DrawerTitle>Configurações do Nó</DrawerTitle>
-        </DrawerHeader>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose()
+      }}
+    >
+      <DialogContent className="max-w-3xl w-full">
+        <DialogHeader>
+          <DialogTitle>Configurações do Nó</DialogTitle>
+        </DialogHeader>
         <div className="p-4 flex-1">{renderNodeSpecificSettings()}</div>
         <div className="p-4 border-t flex justify-end gap-2">
-          <Button variant="outline" onClick={handleClose} className="rounded-sm">
-            Cancelar
+          <Button variant="outline" onClick={onClose} className="rounded-sm">
+            Fechar
           </Button>
           <Button
             onClick={handleSave}
@@ -78,7 +83,7 @@ export const NodeSettingsModal: FC<NodeSettingsModalProps> = ({ isOpen, onClose,
             Salvar
           </Button>
         </div>
-      </DrawerContent>
-    </Drawer>
+      </DialogContent>
+    </Dialog>
   )
 }

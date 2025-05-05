@@ -2,7 +2,7 @@ import { FC, memo } from 'react'
 import { NodeProps } from 'reactflow'
 import { BaseNode } from '../base/BaseNode'
 import { Input } from '@/components/ui/input'
-import { useNodeSettings } from '../../../contexts/NodeSettingsContext'
+import { useNodeConfig } from '../../../contexts/NodeConfigContext'
 import { ActivityNodeConfig } from '../../../types/node-settings'
 
 export interface ActivityNodeData {
@@ -20,11 +20,11 @@ const mechanismLabels = {
 }
 
 export const ActivityNode: FC<NodeProps<ActivityNodeData>> = ({ data, selected, ...props }) => {
-  const { getNodeSettings } = useNodeSettings()
-  const nodeSettings = getNodeSettings<ActivityNodeConfig>(props.id)
+  const { getNodeConfig } = useNodeConfig()
+  const nodeConfig = getNodeConfig<ActivityNodeConfig>(props.id)
 
   const assignee =
-    mechanismLabels[(nodeSettings?.settings.assigneeType as keyof typeof mechanismLabels) || 'NONE']
+    mechanismLabels[(nodeConfig?.assigneeType as keyof typeof mechanismLabels) || 'NONE']
 
   return (
     <BaseNode
