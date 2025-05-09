@@ -1,63 +1,36 @@
 import { createContext, useContext, ReactNode, useState } from 'react'
-import {
-  FormValidationContextType,
-  FormValidationState,
-  ValidationRule,
-  WorkflowValidation,
-} from '../types'
+import { ValidationRule } from '../types'
 
-const initialState: FormValidationState = {
-  validations: [],
-  currentActivityId: undefined,
+interface FormValidationContextType {
+  rules: ValidationRule[]
+  addRule: (rule: ValidationRule) => void
+  removeRule: (index: number) => void
+  updateRule: (index: number, rule: ValidationRule) => void
+  getFieldState: (fieldId: string) => {
+    isVisible: boolean
+    isEnabled: boolean
+    isRequired: boolean
+  }
 }
 
 const FormValidationContext = createContext<FormValidationContextType | undefined>(undefined)
 
 export function FormValidationProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState(initialState)
+  const [rules, setRules] = useState<ValidationRule[]>([])
 
-  const addValidation = (validation: WorkflowValidation) => {
-    setState((prevState) => ({
-      ...prevState,
-      validations: [...prevState.validations, validation],
-    }))
+  const addRule = (rule: ValidationRule) => {
+    setRules((prevRules) => [...prevRules, rule])
   }
 
-  const removeValidation = (nodeId: string) => {
-    setState((prevState) => ({
-      ...prevState,
-      validations: prevState.validations.filter((v) => v.nodeId !== nodeId),
-    }))
+  const removeRule = (index: number) => {
+    setRules((prevRules) => prevRules.filter((_, i) => i !== index))
   }
 
-  const updateValidation = (nodeId: string, rules: ValidationRule[]) => {
-    setState((prevState) => ({
-      ...prevState,
-      validations: prevState.validations.map((v) =>
-        v.nodeId === nodeId ? { ...v, rules } : v,
-      ),
-    }))
-  }
-
-  const setCurrentActivity = (activityId: string) => {
-    setState((prevState) => ({
-      ...prevState,
-      currentActivityId: activityId,
-    }))
+  const updateRule = (index: number, rule: ValidationRule) => {
+    setRules((prevRules) => prevRules.map((r, i) => (i === index ? rule : r)))
   }
 
   const getFieldState = (fieldId: string) => {
-    const currentValidations = state.validations.find((v) => v.nodeId === state.currentActivityId)
-
-    if (!currentValidations) {
-      return {
-        isVisible: true,
-        isEnabled: true,
-        isRequired: false,
-      }
-    }
-
-    const rules = currentValidations.rules.filter((r) => r.trigger?.condition?.fieldId === fieldId)
     const defaultState = {
       isVisible: true,
       isEnabled: true,
@@ -65,33 +38,35 @@ export function FormValidationProvider({ children }: { children: ReactNode }) {
     }
 
     return rules.reduce((state, rule) => {
-      switch (rule.action) {
-        case 'show':
-          return { ...state, isVisible: true }
-        case 'hide':
-          return { ...state, isVisible: false }
-        case 'enable':
-          return { ...state, isEnabled: true }
-        case 'disable':
-          return { ...state, isEnabled: false }
-        case 'require':
-          return { ...state, isRequired: true }
-        case 'optional':
-          return { ...state, isRequired: false }
-        default:
-          return state
+      if (rule.trigger?.condition?.fieldId === fieldId) {
+        switch (rule.action) {
+          case 'show':
+            return { ...state, isVisible: true }
+          case 'hide':
+            return { ...state, isVisible: false }
+          case 'enable':
+            return { ...state, isEnabled: true }
+          case 'disable':
+            return { ...state, isEnabled: false }
+          case 'require':
+            return { ...state, isRequired: true }
+          case 'optional':
+            return { ...state, isRequired: false }
+          default:
+            return state
+        }
       }
+      return state
     }, defaultState)
   }
 
   return (
     <FormValidationContext.Provider
       value={{
-        state,
-        addValidation,
-        removeValidation,
-        updateValidation,
-        setCurrentActivity,
+        rules,
+        addRule,
+        removeRule,
+        updateRule,
         getFieldState,
       }}
     >

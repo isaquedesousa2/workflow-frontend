@@ -159,10 +159,7 @@ export function ValidationRuleBuilder({
 }: Omit<ValidationRuleBuilderProps, 'rules' | 'onAddRule' | 'onRemoveRule' | 'onEditRule'>) {
   const { rows } = useFormBuilder()
   const { nodes } = useWorkflowBuilder()
-  const { state, updateValidation, addValidation } = useFormValidation()
-  const nodeId = 'settings'
-  const rules = state.validations.find((v) => v.nodeId === nodeId)?.rules || []
-
+  const { rules, addRule, removeRule, updateRule } = useFormValidation()
   const [conditionGroup, setConditionGroup] = useState<ConditionGroup>({
     type: 'AND',
     conditions: [],
@@ -334,29 +331,22 @@ export function ValidationRuleBuilder({
       trigger,
       elseActions: elseActions.map(({ action, fieldId }) => ({ action, fieldId })),
     }
-    if (rules.length === 0 && !state.validations.find((v) => v.nodeId === nodeId)) {
-      addValidation({ nodeId, rules: [newRule] })
-    } else {
-      updateValidation(nodeId, [...rules, newRule])
-    }
+    addRule(newRule)
     resetForm()
   }
 
   const handleRemoveRule = (index: number) => {
-    const newRules = rules.filter((_, i) => i !== index)
-    updateValidation(nodeId, newRules)
+    removeRule(index)
   }
 
   const handleEditRule = (index: number, updatedRule?: ValidationRule) => {
     if (updatedRule) {
-      const newRules = [...rules]
-      newRules[index] = updatedRule
-      updateValidation(nodeId, newRules)
+      updateRule(index, updatedRule)
     } else {
       const rule = rules[index]
       setEditingRuleIndex(index)
       // Mapear as condições da regra existente para o formato de cenários
-      const mappedScenarios = rule.condition.conditions.map((cond) => {
+      const mappedScenarios = rule.condition.conditions.map((cond: Condition | ConditionGroup) => {
         if ('type' in cond) {
           return {
             id: crypto.randomUUID(),
@@ -400,7 +390,7 @@ export function ValidationRuleBuilder({
           fieldId: targetFieldId,
         },
       ])
-      setElseActions((rule.elseActions || []).map((a) => ({ ...a, id: crypto.randomUUID() })))
+      setElseActions((rule.elseActions || []).map((a: any) => ({ ...a, id: crypto.randomUUID() })))
       setSelectedActivity(rule.trigger?.activityId || 'all')
       setOpenConditionalDialog(true)
     }
@@ -718,33 +708,45 @@ export function ValidationRuleBuilder({
       </AlertDialog>
       <div className="flex overflow-hidden h-[calc(100vh-130px)]">
         <div className="flex-1 p-8 overflow-y-auto max-h-[calc(100vh-130px)]">
-          <h2 className="text-xl font-bold mb-6">Regras de Validação</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold">Regras de Validação</h2>
+          </div>
           <div className="space-y-4">
-            {rules.map((rule, index) => (
-              <Card key={index} className="border-l-4 border-blue-500">
-                <CardHeader className="p-4">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium">
-                      {renderConditionText(rule.condition, formFields)}
-                    </CardTitle>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleEditRule(index)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => setRuleToDelete(index)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+            {rules.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-200 rounded-lg">
+                <HelpCircle className="h-12 w-12 text-gray-400 mb-4" />
+                <p className="text-gray-500 text-center">
+                  Nenhuma regra de validação criada ainda. Use o botão no canto superior direito
+                  para adicionar sua primeira regra.
+                </p>
+              </div>
+            ) : (
+              rules.map((rule, index) => (
+                <Card key={index} className="border-l-4 border-blue-500">
+                  <CardHeader className="p-4">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium">
+                        {renderConditionText(rule.condition, formFields)}
+                      </CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleEditRule(index)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => setRuleToDelete(index)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <div className="flex items-center gap-2">
-                    {getActionIcon(rule.action)}
-                    <span className="text-sm">{getActionLabel(rule.action)} campo</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <div className="flex items-center gap-2">
+                      {getActionIcon(rule.action)}
+                      <span className="text-sm">{getActionLabel(rule.action)} campo</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
           <div className="mt-8">
             <Dialog open={openConditionalDialog} onOpenChange={setOpenConditionalDialog}>
